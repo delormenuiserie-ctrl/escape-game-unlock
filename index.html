@@ -9,18 +9,18 @@ const IconSettings = () => <svg width="24" height="24" viewBox="0 0 24 24" fill=
 const IconHand = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v5"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v10"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>;
 const IconSearch = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" cy="21" x2="16.65" y2="16.65"/></svg>;
 
-/* --- PIECES PUZZLE FIXÉES (Pas de triangle) --- */
+/* --- PIECES PUZZLE --- */
 const IconPuzzleMale = () => (
     <svg width="28" height="28" viewBox="0 0 24 24">
         <rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" />
-        <circle cx="17" cy="12" r="3.5" fill="#f87171" />
+        <circle cx="17" cy="12" r="3" fill="#f87171" />
     </svg>
 );
 
 const IconPuzzleFemale = () => (
     <svg width="28" height="28" viewBox="0 0 24 24">
-        <rect x="7" y="4" width="13" height="16" rx="1" fill="#60a5fa" />
-        <circle cx="7" cy="12" r="3.5" fill="#020617" />
+        <rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" />
+        <circle cx="8" cy="12" r="3" fill="#020617" />
     </svg>
 );
 
@@ -28,31 +28,38 @@ const IconPuzzleFemale = () => (
 const GAME_DATA = {
     cards: {
         'intro': { id: 'intro', type: 'grey', title: "Mission", desc: "1931. Infiltrez le siège de la 2M4GD Corp et volez le prototype révolutionnaire.", reveals: [5], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20intro%20Don%20bailat.png" },
-        5: { id: 5, type: 'grey', title: "5ème Avenue", desc: "Le Flatiron Building (numéro 44) est devant vous. Fouillez les alentours.", hint: "Cherchez une lettre 'F' camouflée dans le décor.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png" },
+        5: { id: 5, type: 'grey', title: "5ème Avenue", desc: "Le Flatiron Building (numéro 44) est devant vous. Fouillez les alentours.", reveals: [35], hint: "Cherchez une lettre 'F' camouflée dans le décor.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png" },
+        35: { id: 35, type: 'grey', title: "Zone de patrouille", desc: "Les gardes surveillent l'entrée. Restez discret.", fallbackImg: "https://placehold.co/300/450/334155/FFFFFF?text=Garde+35" },
         'F': { id: 'F', type: 'grey', title: "Sacoche", desc: "Matériel d'effraction récupéré.", reveals: [8, 37, 42], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20F%20sacoche.png" },
         44: { id: 44, type: 'blue', title: "Fenêtre Haute", desc: "Ouverte à l'étage... Il faut de quoi grimper.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/44%20carte%20appartement.png" },
         86: { id: 86, type: 'grey', title: "Le Bureau", desc: "Luxueux. Cherchez la chambre forte.", reveals: [11, 25, 58, 'W'], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2086%20reptembre%20test.png" },
         8: { id: 8, type: 'red', title: "Pied-de-biche", desc: "Outil en métal.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%208%20pied%20de%20biche.png" },
-        15: { id: 15, type: 'red', title: "Épingle", desc: "Pour les serrures.", fallbackImg: "https://placehold.co/300/450/991b1b/FFFFFF?text=Epingle+15" },
+        15: { id: 15, type: 'red', title: "Épingle", desc: "Pour crocheter les serrures délicates.", fallbackImg: "https://placehold.co/300/450/991b1b/FFFFFF?text=Epingle+15" },
         42: { id: 42, type: 'red', title: "Grappin", desc: "Corde et crochet.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2042%20grappin.png" },
         37: { id: 37, type: 'red', title: "Manette", desc: "Levier de commande.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2037%20la%20manette.png" },
         11: { id: 11, type: 'grey', title: "Tapis", desc: "Motif animalier.", hint: "Regardez les chiffres sur la note (73). L'aigle (95) domine le serpent (89).", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2011%20tapis.png" },
-        58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2058.png" },
+        58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée. Il me faudrait un petit objet métallique.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2058.png" },
         25: { id: 25, type: 'grey', title: "Portrait", desc: "Don Robinio.", hint: "L'entrée secrète 'R' est derrière ce tableau.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2025%20don%20robinio.png" },
         'W': { id: 'W', type: 'green', title: "Machine W", desc: "Panneau électrique.", hint: "Fils (6) + Manette (37) = ?", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20w%20141.png" },
-        6: { id: 6, type: 'blue', title: "Panneau W déverrouillé", desc: "Il ne manque plus que la manette pour couper le courant.", fallbackImg: "https://placehold.co/300/450/1e40af/FFFFFF?text=Panneau+Prêt" },
         'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode.", fallbackImg: "https://placehold.co/300/450/065f46/FFFFFF?text=Porte+Coffre+R" },
         22: { id: 22, type: 'blue', title: "Caisse", desc: "Dans le coffre.", fallbackImg: "https://placehold.co/300/450/1e40af/FFFFFF?text=Caisse+22" },
         73: { id: 73, type: 'grey', title: "Note Index", desc: "Page 95 / 89.", fallbackImg: "https://placehold.co/300/450/475569/FFFFFF?text=Indice+73" },
-        43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "Le courant est coupé. L'alarme du portrait est HS. Le prototype est à portée de main.", fallbackImg: "https://placehold.co/300/450/000/FFF?text=ALERME+OFF" },
+        43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "L'alarme est coupée. Le portrait a glissé, révélant une cache secrète.", reveals: ['T', 15], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2043.png" },
+        'T': { id: 'T', type: 'gold', title: "Talisman", desc: "L'artefact de Don Bailat. Il permet de voyager dans le temps !", fallbackImg: "https://placehold.co/300/450/f59e0b/FFFFFF?text=TALISMAN" },
         30: { id: 30, type: 'gold', title: "Prototype", desc: "MISSION RÉUSSIE !", fallbackImg: "https://placehold.co/300/450/854d0e/FFFFFF?text=VICTOIRE" }
     },
-    combinations: { "15+58": 73, "37+6": 43, "8+22": 30, "42+44": 86 },
+    combinations: { "15+58": 73, "37+W": 43, "8+22": 30, "42+44": 86 },
     codes: { 'W': "43", 'R': "9589" }
 };
 
-const AUTO_DISCARD = { 5: ['intro'], 86: [5, 44, 42, 'F'], 73: [15, 58], 43: [37, 6], 30: [8, 22] };
-const ALL_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 37, 42, 58, 73, 86, 'W', '6', 'F', 'R'];
+const AUTO_DISCARD = { 
+    5: ['intro'], 
+    86: [5, 44, 42, 'F'], 
+    73: [15, 58], 
+    43: [37, 'W', 35], // Archivage automatique de la manette, du panneau et des gardes
+    30: [8, 22] 
+};
+const ALL_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 35, 37, 42, 58, 73, 86, 'W', 'F', 'R', 'T'];
 
 export default function App() {
     const [isLoaded, setIsLoaded] = useState(false);
@@ -72,7 +79,7 @@ export default function App() {
     const [showArchive, setShowArchive] = useState(false);
     const [codeState, setCodeState] = useState(null);
 
-    // Animation states
+    // Refs et states pour l'animation d'archivage
     const gridBtnRef = useRef(null);
     const [animatingCards, setAnimatingCards] = useState([]);
     const [pendingDiscards, setPendingDiscards] = useState([]);
@@ -120,15 +127,15 @@ export default function App() {
 
     const addCard = (id) => {
         const card = GAME_DATA.cards[id];
-        if (!card || hand.some(c => c.id === id) || discardPile.some(c => c.id === id)) return;
+        if (!card || hand.some(c => String(c.id) === String(id)) || discardPile.some(c => String(c.id) === String(id))) return;
         
         let currentHand = [...hand, card];
         let toArchive = [];
 
         if (AUTO_DISCARD[id]) {
             const idsToDiscard = AUTO_DISCARD[id];
-            toArchive = currentHand.filter(c => idsToDiscard.includes(c.id));
-            currentHand = currentHand.filter(c => !idsToDiscard.includes(c.id));
+            toArchive = currentHand.filter(c => idsToDiscard.some(did => String(did) === String(c.id)));
+            currentHand = currentHand.filter(c => !idsToDiscard.some(did => String(did) === String(c.id)));
         }
 
         setHand(currentHand);
@@ -149,13 +156,18 @@ export default function App() {
                 setTransformingId('W');
                 setMsg({ t: "Panneau déverrouillé !", s: 'success' });
                 setTimeout(() => {
-                    setHand(prev => prev.map(c => c.id === 'W' ? {...GAME_DATA.cards[6]} : c));
+                    setHand(prev => prev.map(c => c.id === 'W' ? {
+                        ...c,
+                        type: 'blue',
+                        title: "Panneau W déverrouillé",
+                        desc: "Prêt à être actionné par la manette."
+                    } : c));
                     setTransformingId(null);
                     setActiveMachine(null);
                 }, 600);
             } else {
-                const machineCard = hand.find(c => c.id === m.id);
-                setHand(prev => prev.filter(c => c.id !== m.id));
+                const machineCard = hand.find(c => String(c.id) === String(m.id));
+                setHand(prev => prev.filter(c => String(c.id) !== String(m.id)));
                 if (machineCard) executeArchiveFly(machineCard);
                 if (m.id === 'R') addCard(22);
                 setActiveMachine(null); 
@@ -174,10 +186,10 @@ export default function App() {
         const v = inputValue.toUpperCase();
         let targetId = null;
         if(v === 'F') targetId = 'F';
-        else if(v === 'R' && (hand.some(c=>c.id===86)||discardPile.some(c=>c.id===86))) targetId = 'R';
+        else if(v === 'R' && (hand.some(c=>String(c.id)===String(86))||discardPile.some(c=>String(c.id)===String(86)))) targetId = 'R';
         else if(GAME_DATA.cards[v]) targetId = v;
 
-        if (targetId && !hand.some(c => c.id === targetId) && !discardPile.some(c => c.id === targetId)) {
+        if (targetId && !hand.some(c => String(c.id) === String(targetId)) && !discardPile.some(c => String(c.id) === String(targetId))) {
             setCodeState('success');
             setTimeout(() => { setCodeState(null); addCard(targetId); }, 600);
         } else {
@@ -193,9 +205,9 @@ export default function App() {
         const key = [id1, id2].sort((a,b) => String(a).localeCompare(String(b))).join('+');
         const result = GAME_DATA.combinations[key];
         if (result) {
-            const card1 = hand.find(c => c.id === id1);
-            const card2 = hand.find(c => c.id === id2);
-            setHand(prev => prev.filter(c => c.id !== id1 && c.id !== id2));
+            const card1 = hand.find(c => String(c.id) === String(id1));
+            const card2 = hand.find(c => String(c.id) === String(id2));
+            setHand(prev => prev.filter(c => String(c.id) !== String(id1) && String(c.id) !== String(id2)));
             if (card1) executeArchiveFly(card1);
             if (card2) setTimeout(() => executeArchiveFly(card2), 250);
             addCard(result);
@@ -296,7 +308,7 @@ export default function App() {
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-lg px-3 pb-32">
                 {hand.map(c => {
                     const isRed = c.type === 'red';
-                    const isBlue = c.type === 'blue' || c.id === 44;
+                    const isBlue = c.type === 'blue' || String(c.id) === '44';
                     const isGreen = c.type === 'green';
                     const isTransforming = transformingId === c.id;
 
@@ -365,8 +377,8 @@ export default function App() {
                         <h2 className="text-2xl font-black mb-1 uppercase tracking-tighter text-white border-b border-slate-800 pb-3 inline-block">{zoomedCard.title}</h2>
                         <p className="text-slate-400 text-base mb-10 leading-snug font-medium">{zoomedCard.desc}</p>
                         <div className="flex flex-col gap-3 w-full max-w-md mx-auto pb-4">
-                            {zoomedCard.reveals?.filter(id => !hand.some(c=>c.id===id) && !discardPile.some(c=>c.id===id)).map(id => (
-                                <button key={id} onClick={() => { addCard(id); if (id === 5 || zoomedCard.reveals.filter(rid => !hand.some(c=>c.id===rid) && !discardPile.some(c=>c.id===rid)).length <= 1) setZoomedCard(null); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-sm"><IconHand /> {id === 5 ? "Lancer l'Aventure" : `Prendre carte ${id}`}</button>
+                            {zoomedCard.reveals?.filter(id => !hand.some(c=>String(c.id)===String(id)) && !discardPile.some(c=>String(c.id)===String(id))).map(id => (
+                                <button key={id} onClick={() => { addCard(id); if (id === 5 || zoomedCard.reveals.filter(rid => !hand.some(c=>String(c.id)===String(rid)) && !discardPile.some(c=>String(c.id)===String(rid))).length <= 1) setZoomedCard(null); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-sm"><IconHand /> {id === 'T' ? "Prendre le Talisman" : id === 15 ? "Prendre l'Épingle" : `Prendre carte ${id}`}</button>
                             ))}
                             <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest">Observation seule</button>
                         </div>
@@ -401,8 +413,8 @@ export default function App() {
                         </div>
                         <div className="grid grid-cols-3 gap-4">
                             {ALL_IDS.map(id => {
-                                const inH = hand.find(x=>x.id===id);
-                                const inD = discardPile.find(x=>x.id===id);
+                                const inH = hand.find(x=>String(x.id)===String(id));
+                                const inD = discardPile.find(x=>String(x.id)===String(id));
                                 const card = GAME_DATA.cards[id];
                                 return (
                                     <div key={id} className={`aspect-[2/3] border-2 rounded-2xl flex items-center justify-center relative overflow-hidden ${inH ? 'border-blue-500 bg-slate-800 shadow-[0_0_10px_rgba(59,130,246,0.3)]' : inD ? 'border-red-900 bg-black/40 opacity-40' : 'border-slate-800 opacity-5'}`}>

@@ -1,432 +1,415 @@
-import React, { useState, useEffect, useRef } from 'react';
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Unlock! 5ème Avenue</title>
+    
+    <!-- Scripts indispensables pour GitHub Pages -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-/* --- ICONES SVG --- */
-const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
-const IconGrid = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-const IconX = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-const IconLightbulb = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2v1"/><path d="M12 6a6 6 0 0 0-6 6c0 3.5 3 5.5 3 8h6c0-2.5 3-4.5 3-8a6 6 0 0 0-6-6Z"/></svg>;
-const IconSettings = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
-const IconHand = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v5"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v10"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>;
-const IconSearch = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" cy="21" x2="16.65" y2="16.65"/></svg>;
-
-/* --- PIECES PUZZLE --- */
-const IconPuzzleMale = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24">
-        <rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" />
-        <circle cx="17" cy="12" r="3" fill="#f87171" />
-    </svg>
-);
-
-const IconPuzzleFemale = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24">
-        <rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" />
-        <circle cx="8" cy="12" r="3" fill="#020617" />
-    </svg>
-);
-
-/* --- DONNÉES DU SCÉNARIO --- */
-const GAME_DATA = {
-    cards: {
-        'intro': { id: 'intro', type: 'grey', title: "Mission", desc: "1931. Infiltrez le siège de la 2M4GD Corp et volez le prototype révolutionnaire.", reveals: [5], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20intro%20Don%20bailat.png" },
-        5: { id: 5, type: 'grey', title: "5ème Avenue", desc: "Le Flatiron Building (numéro 44) est devant vous. Fouillez les alentours.", reveals: [35], hint: "Cherchez une lettre 'F' camouflée dans le décor.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png" },
-        35: { id: 35, type: 'grey', title: "Zone de patrouille", desc: "Les gardes surveillent l'entrée. Restez discret.", fallbackImg: "https://placehold.co/300/450/334155/FFFFFF?text=Garde+35" },
-        'F': { id: 'F', type: 'grey', title: "Sacoche", desc: "Matériel d'effraction récupéré.", reveals: [8, 37, 42], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20F%20sacoche.png" },
-        44: { id: 44, type: 'blue', title: "Fenêtre Haute", desc: "Ouverte à l'étage... Il faut de quoi grimper.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/44%20carte%20appartement.png" },
-        86: { id: 86, type: 'grey', title: "Le Bureau", desc: "Luxueux. Cherchez la chambre forte.", reveals: [11, 25, 58, 'W'], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2086%20reptembre%20test.png" },
-        8: { id: 8, type: 'red', title: "Pied-de-biche", desc: "Outil en métal.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%208%20pied%20de%20biche.png" },
-        15: { id: 15, type: 'red', title: "Épingle", desc: "Pour crocheter les serrures délicates.", fallbackImg: "https://placehold.co/300/450/991b1b/FFFFFF?text=Epingle+15" },
-        42: { id: 42, type: 'red', title: "Grappin", desc: "Corde et crochet.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2042%20grappin.png" },
-        37: { id: 37, type: 'red', title: "Manette", desc: "Levier de commande.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2037%20la%20manette.png" },
-        11: { id: 11, type: 'grey', title: "Tapis", desc: "Motif animalier.", hint: "Regardez les chiffres sur la note (73). L'aigle (95) domine le serpent (89).", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2011%20tapis.png" },
-        58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée. Il me faudrait un petit objet métallique.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2058.png" },
-        25: { id: 25, type: 'grey', title: "Portrait", desc: "Don Robinio.", hint: "L'entrée secrète 'R' est derrière ce tableau.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2025%20don%20robinio.png" },
-        'W': { id: 'W', type: 'green', title: "Machine W", desc: "Panneau électrique.", hint: "Fils (6) + Manette (37) = ?", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20w%20141.png" },
-        'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode.", fallbackImg: "https://placehold.co/300/450/065f46/FFFFFF?text=Porte+Coffre+R" },
-        22: { id: 22, type: 'blue', title: "Caisse", desc: "Dans le coffre.", fallbackImg: "https://placehold.co/300/450/1e40af/FFFFFF?text=Caisse+22" },
-        73: { id: 73, type: 'grey', title: "Note Index", desc: "Page 95 / 89.", fallbackImg: "https://placehold.co/300/450/475569/FFFFFF?text=Indice+73" },
-        43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "L'alarme est coupée. Le portrait a glissé, révélant une cache secrète.", reveals: ['T', 15], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2043.png" },
-        'T': { id: 'T', type: 'gold', title: "Talisman", desc: "L'artefact de Don Bailat. Il permet de voyager dans le temps !", fallbackImg: "https://placehold.co/300/450/f59e0b/FFFFFF?text=TALISMAN" },
-        30: { id: 30, type: 'gold', title: "Prototype", desc: "MISSION RÉUSSIE !", fallbackImg: "https://placehold.co/300/450/854d0e/FFFFFF?text=VICTOIRE" }
-    },
-    combinations: { "15+58": 73, "37+W": 43, "8+22": 30, "42+44": 86 },
-    codes: { 'W': "43", 'R': "9589" }
-};
-
-const AUTO_DISCARD = { 
-    5: ['intro'], 
-    86: [5, 44, 42, 'F'], 
-    73: [15, 58], 
-    43: [37, 'W', 35], // Archivage automatique de la manette, du panneau et des gardes
-    30: [8, 22] 
-};
-const ALL_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 35, 37, 42, 58, 73, 86, 'W', 'F', 'R', 'T'];
-
-export default function App() {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [hand, setHand] = useState([]);
-    const [discardPile, setDiscardPile] = useState([]);
-    const [selectedId, setSelectedId] = useState(null);
-    const [inputValue, setInputValue] = useState("");
-    const [zoomedCard, setZoomedCard] = useState(null);
-    const [showZoomInfo, setShowZoomInfo] = useState(false);
-    const [activeMachine, setActiveMachine] = useState(null);
-    const [machineCode, setMachineCode] = useState("");
-    const [hintConfirm, setHintConfirm] = useState(null);
-    const [purchasedHints, setPurchasedHints] = useState(new Set());
-    const [msg, setMsg] = useState({ t: "Agent, prêt pour l'infiltration ?", s: 'info' });
-    const [time, setTime] = useState(0);
-    const [penaltyMinutes, setPenaltyMinutes] = useState(0);
-    const [showArchive, setShowArchive] = useState(false);
-    const [codeState, setCodeState] = useState(null);
-
-    // Refs et states pour l'animation d'archivage
-    const gridBtnRef = useRef(null);
-    const [animatingCards, setAnimatingCards] = useState([]);
-    const [pendingDiscards, setPendingDiscards] = useState([]);
-    const [transformingId, setTransformingId] = useState(null);
-
-    useEffect(() => {
-        const imageUrls = Object.values(GAME_DATA.cards).map(c => c.fallbackImg);
-        let loadedCount = 0;
-        imageUrls.forEach(url => {
-            const img = new Image();
-            img.src = url;
-            img.onload = img.onerror = () => {
-                loadedCount++;
-                if (loadedCount === imageUrls.length) setIsLoaded(true);
-            };
-        });
-        setTimeout(() => setIsLoaded(true), 3000);
-        setHand([GAME_DATA.cards['intro']]);
-        const interval = setInterval(() => setTime(prev => prev + 1), 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    // Déclencher l'animation post-zoom
-    useEffect(() => {
-        if (!zoomedCard && pendingDiscards.length > 0) {
-            pendingDiscards.forEach((card, index) => {
-                setTimeout(() => executeArchiveFly(card), index * 250);
-            });
-            setPendingDiscards([]);
+    <style>
+        body { 
+            background-color: #020617; 
+            color: #cbd5e1; 
+            margin: 0; 
+            overflow-x: hidden; 
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
-    }, [zoomedCard]);
 
-    const executeArchiveFly = (card) => {
-        if (!gridBtnRef.current) return;
-        const rect = gridBtnRef.current.getBoundingClientRect();
-        const tx = rect.left + rect.width / 2;
-        const ty = rect.top + rect.height / 2;
-        const animId = Math.random().toString(36);
-        setAnimatingCards(prev => [...prev, { ...card, animId, tx, ty }]);
-        setTimeout(() => {
-            setAnimatingCards(prev => prev.filter(c => c.animId !== animId));
-            setDiscardPile(prev => [...prev, card]);
-        }, 850);
-    };
-
-    const addCard = (id) => {
-        const card = GAME_DATA.cards[id];
-        if (!card || hand.some(c => String(c.id) === String(id)) || discardPile.some(c => String(c.id) === String(id))) return;
+        /* --- ANIMATIONS --- */
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
+        @keyframes successPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
-        let currentHand = [...hand, card];
-        let toArchive = [];
-
-        if (AUTO_DISCARD[id]) {
-            const idsToDiscard = AUTO_DISCARD[id];
-            toArchive = currentHand.filter(c => idsToDiscard.some(did => String(did) === String(c.id)));
-            currentHand = currentHand.filter(c => !idsToDiscard.some(did => String(did) === String(c.id)));
+        @keyframes archiveFly {
+            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; top: 50%; left: 50%; border-radius: 20px; }
+            100% { transform: translate(-50%, -50%) scale(0.05); opacity: 0; top: var(--ty); left: var(--tx); border-radius: 50%; }
+        }
+        @keyframes iconRotate {
+            0% { transform: rotate(0) scale(1); opacity: 1; }
+            50% { transform: rotate(180deg) scale(0); opacity: 0; }
+            100% { transform: rotate(360deg) scale(1); opacity: 1; }
         }
 
-        setHand(currentHand);
-        setMsg({ t: `Carte ${id} révélée.`, s: 'success' });
-
-        if (toArchive.length > 0) {
-            if (zoomedCard) {
-                setPendingDiscards(prev => [...prev, ...toArchive]);
-            } else {
-                toArchive.forEach((c, i) => setTimeout(() => executeArchiveFly(c), i * 250));
-            }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-shake-error { animation: shake 0.4s ease-in-out; border-color: #ef4444 !important; background: rgba(127, 29, 29, 0.4) !important; }
+        .animate-success-flash { animation: successPulse 0.4s ease-out; border-color: #10b981 !important; background: rgba(6, 78, 59, 0.4) !important; }
+        .animate-icon-transform { animation: iconRotate 0.6s ease-in-out; }
+        
+        .card-fly-overlay { 
+            position: fixed; z-index: 1000; pointer-events: none; 
+            width: 200px; aspect-ratio: 2/3; 
+            animation: archiveFly 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
         }
-    };
 
-    const solveMachine = (m, code) => {
-        if (code === GAME_DATA.codes[m.id]) {
-            if (m.id === 'W') {
-                setTransformingId('W');
-                setMsg({ t: "Panneau déverrouillé !", s: 'success' });
-                setTimeout(() => {
-                    setHand(prev => prev.map(c => c.id === 'W' ? {
-                        ...c,
-                        type: 'blue',
-                        title: "Panneau W déverrouillé",
-                        desc: "Prêt à être actionné par la manette."
-                    } : c));
-                    setTransformingId(null);
-                    setActiveMachine(null);
-                }, 600);
-            } else {
-                const machineCard = hand.find(c => String(c.id) === String(m.id));
-                setHand(prev => prev.filter(c => String(c.id) !== String(m.id)));
-                if (machineCard) executeArchiveFly(machineCard);
-                if (m.id === 'R') addCard(22);
-                setActiveMachine(null); 
-                setMsg({ t: "Code accepté.", s: 'success' });
-            }
-            setMachineCode("");
-        } else {
-            setMsg({ t: "ERREUR CODE !", s: 'error' });
-            setPenaltyMinutes(prev => prev + 3); 
-            setMachineCode("");
-        }
-    };
-
-    const handleCodeSubmit = (e) => {
-        e.preventDefault();
-        const v = inputValue.toUpperCase();
-        let targetId = null;
-        if(v === 'F') targetId = 'F';
-        else if(v === 'R' && (hand.some(c=>String(c.id)===String(86))||discardPile.some(c=>String(c.id)===String(86)))) targetId = 'R';
-        else if(GAME_DATA.cards[v]) targetId = v;
-
-        if (targetId && !hand.some(c => String(c.id) === String(targetId)) && !discardPile.some(c => String(c.id) === String(targetId))) {
-            setCodeState('success');
-            setTimeout(() => { setCodeState(null); addCard(targetId); }, 600);
-        } else {
-            setCodeState('error');
-            setPenaltyMinutes(p => p + 2);
-            setMsg({t: "CODE INVALIDE", s: 'error'});
-            setTimeout(() => setCodeState(null), 600);
-        }
-        setInputValue("");
-    };
-
-    const combine = (id1, id2) => {
-        const key = [id1, id2].sort((a,b) => String(a).localeCompare(String(b))).join('+');
-        const result = GAME_DATA.combinations[key];
-        if (result) {
-            const card1 = hand.find(c => String(c.id) === String(id1));
-            const card2 = hand.find(c => String(c.id) === String(id2));
-            setHand(prev => prev.filter(c => String(c.id) !== String(id1) && String(c.id) !== String(id2)));
-            if (card1) executeArchiveFly(card1);
-            if (card2) setTimeout(() => executeArchiveFly(card2), 250);
-            addCard(result);
-            setMsg({ t: "Combinaison réussie !", s: 'success' });
-        } else {
-            setMsg({ t: "Incompatible.", s: 'error' });
-            setPenaltyMinutes(prev => prev + 1);
-        }
-        setSelectedId(null);
-    };
-
-    const revealHint = () => {
-        if (!hintConfirm) return;
-        setPenaltyMinutes(prev => prev + 5);
-        setPurchasedHints(prev => new Set(prev).add(hintConfirm.id));
-        setMsg({ t: hintConfirm.hint || "Observez bien.", s: 'info' });
-        setHintConfirm(null);
-    };
-
-    const formatTime = () => {
-        const total = time + (penaltyMinutes * 60);
-        const m = Math.floor(total / 60).toString().padStart(2, '0');
-        const s = (total % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
-    };
-
-    if (!isLoaded) return (
-        <div className="fixed inset-0 bg-[#020617] flex flex-col items-center justify-center z-[9999]">
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-blue-500 font-bold uppercase tracking-widest animate-pulse text-sm">Chargement du dossier...</p>
+        .card-ratio { aspect-ratio: 2 / 3; }
+        .selected-card { border-color: #eab308 !important; box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); transform: scale(1.02); z-index: 20; }
+        .floating-btn { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Le point d'entrée de l'application -->
+    <div id="root">
+        <div style="display:flex; height:100vh; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+            <p style="color:white; font-size:18px;">Initialisation du système...</p>
         </div>
-    );
+    </div>
 
-    return (
-        <div className="flex flex-col items-center min-h-screen w-full select-none bg-[#020617] text-slate-300 overflow-hidden font-sans">
-            
-            <style>{`
-                @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
-                @keyframes successPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-                
-                @keyframes archiveFly {
-                    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; top: 50%; left: 50%; border-radius: 20px; }
-                    100% { transform: translate(-50%, -50%) scale(0.05); opacity: 0; top: var(--ty); left: var(--tx); border-radius: 50%; }
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        /* --- ICONES SVG --- */
+        const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const IconGrid = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
+        const IconX = () => <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const IconLightbulb = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2v1"/><path d="M12 6a6 6 0 0 0-6 6c0 3.5 3 5.5 3 8h6c0-2.5 3-4.5 3-8a6 6 0 0 0-6-6Z"/></svg>;
+        const IconSettings = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
+        const IconHand = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v5"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v10"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>;
+        const IconSearch = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" cy="21" x2="16.65" y2="16.65"/></svg>;
+
+        /* --- PIECES PUZZLE --- */
+        const IconPuzzleMale = () => (
+            <svg width="28" height="28" viewBox="0 0 24 24">
+                <rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" />
+                <circle cx="16" cy="12" r="3.5" fill="#f87171" />
+            </svg>
+        );
+
+        const IconPuzzleFemale = () => (
+            <svg width="28" height="28" viewBox="0 0 24 24">
+                <rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" />
+                <circle cx="8" cy="12" r="3.5" fill="#020617" />
+            </svg>
+        );
+
+        /* --- DONNÉES --- */
+        const GAME_DATA = {
+            cards: {
+                'intro': { id: 'intro', type: 'grey', title: "Mission", desc: "1931. Infiltrez le siège de la 2M4GD Corp et volez le prototype.", reveals: [5], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20intro%20Don%20bailat.png" },
+                5: { id: 5, type: 'grey', title: "5ème Avenue", desc: "Le Flatiron Building est devant vous. Fouillez les alentours.", reveals: [35], hint: "Cherchez une lettre 'F' camouflée dans le décor.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png" },
+                35: { id: 35, type: 'grey', title: "Zone de patrouille", desc: "Les gardes surveillent l'entrée. Restez discret.", fallbackImg: "https://placehold.co/300/450/334155/FFFFFF?text=Garde+35" },
+                'F': { id: 'F', type: 'grey', title: "Sacoche", desc: "Matériel récupéré.", reveals: [8, 37, 42], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20F%20sacoche.png" },
+                44: { id: 44, type: 'blue', title: "Fenêtre Haute", desc: "Ouverte à l'étage... Il faut grimper.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/44%20carte%20appartement.png" },
+                86: { id: 86, type: 'grey', title: "Le Bureau", desc: "Luxueux. Cherchez la chambre forte.", reveals: [11, 25, 58, 'W'], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2086%20reptembre%20test.png" },
+                8: { id: 8, type: 'red', title: "Pied-de-biche", desc: "Outil en métal.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%208%20pied%20de%20biche.png" },
+                15: { id: 15, type: 'red', title: "Épingle", desc: "Pour crocheter les serrures.", fallbackImg: "https://placehold.co/300/450/991b1b/FFFFFF?text=Epingle+15" },
+                42: { id: 42, type: 'red', title: "Grappin", desc: "Corde et crochet.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2042%20grappin.png" },
+                37: { id: 37, type: 'red', title: "Manette", desc: "Levier de commande.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2037%20la%20manette.png" },
+                11: { id: 11, type: 'grey', title: "Tapis", desc: "Motif animalier.", hint: "Aigle (95) domine le serpent (89).", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2011%20tapis.png" },
+                58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2058.png" },
+                25: { id: 25, type: 'grey', title: "Portrait", desc: "Don Robinio.", hint: "L'entrée secrète 'R' est derrière ce tableau.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2025%20don%20robinio.png" },
+                'W': { id: 'W', type: 'green', title: "Machine W", desc: "Panneau électrique.", hint: "Fils (6) + Manette (37) = ?", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20w%20141.png" },
+                'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode.", fallbackImg: "https://placehold.co/300/450/065f46/FFFFFF?text=Porte+Coffre+R" },
+                22: { id: 22, type: 'blue', title: "Caisse", desc: "Dans le coffre.", fallbackImg: "https://placehold.co/300/450/1e40af/FFFFFF?text=Caisse+22" },
+                73: { id: 73, type: 'grey', title: "Note Index", desc: "Page 95 / 89.", fallbackImg: "https://placehold.co/300/450/475569/FFFFFF?text=Indice+73" },
+                43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "La cache secrète est révélée !", reveals: ['T', 15], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2043.png" },
+                'T': { id: 'T', type: 'gold', title: "Talisman", desc: "Artefact temporel !", fallbackImg: "https://placehold.co/300/450/f59e0b/FFFFFF?text=TALISMAN" },
+                30: { id: 30, type: 'gold', title: "Prototype", desc: "MISSION RÉUSSIE !", fallbackImg: "https://placehold.co/300/450/854d0e/FFFFFF?text=VICTOIRE" }
+            },
+            combinations: { "15+58": 73, "37+W": 43, "8+22": 30, "42+44": 86 },
+            codes: { 'W': "43", 'R': "9589" }
+        };
+
+        const AUTO_DISCARD = { 
+            5: ['intro'], 
+            86: [5, 44, 42, 'F'], 
+            73: [15, 58], 
+            43: [37, 'W', 35], 
+            30: [8, 22] 
+        };
+        const ALL_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 35, 37, 42, 58, 73, 86, 'W', 'F', 'R', 'T'];
+
+        function App() {
+            const [isLoaded, setIsLoaded] = useState(false);
+            const [hand, setHand] = useState([]);
+            const [discardPile, setDiscardPile] = useState([]);
+            const [selectedId, setSelectedId] = useState(null);
+            const [inputValue, setInputValue] = useState("");
+            const [zoomedCard, setZoomedCard] = useState(null);
+            const [showZoomInfo, setShowZoomInfo] = useState(false);
+            const [activeMachine, setActiveMachine] = useState(null);
+            const [machineCode, setMachineCode] = useState("");
+            const [hintConfirm, setHintConfirm] = useState(null);
+            const [purchasedHints, setPurchasedHints] = useState(new Set());
+            const [msg, setMsg] = useState({ t: "Agent, prêt ?", s: 'info' });
+            const [time, setTime] = useState(0);
+            const [penaltyMinutes, setPenaltyMinutes] = useState(0);
+            const [showArchive, setShowArchive] = useState(false);
+            const [codeState, setCodeState] = useState(null);
+
+            const gridBtnRef = useRef(null);
+            const [animatingCards, setAnimatingCards] = useState([]);
+            const [pendingDiscards, setPendingDiscards] = useState([]);
+            const [transformingId, setTransformingId] = useState(null);
+
+            useEffect(() => {
+                const imageUrls = Object.values(GAME_DATA.cards).map(c => c.fallbackImg);
+                let loadedCount = 0;
+                imageUrls.forEach(url => {
+                    const img = new Image();
+                    img.src = url;
+                    img.onload = img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount === imageUrls.length) setIsLoaded(true);
+                    };
+                });
+                setTimeout(() => setIsLoaded(true), 3000);
+                setHand([GAME_DATA.cards['intro']]);
+                const interval = setInterval(() => setTime(prev => prev + 1), 1000);
+                return () => clearInterval(interval);
+            }, []);
+
+            useEffect(() => {
+                if (!zoomedCard && pendingDiscards.length > 0) {
+                    pendingDiscards.forEach((card, index) => {
+                        setTimeout(() => executeArchiveFly(card), index * 250);
+                    });
+                    setPendingDiscards([]);
                 }
-                @keyframes iconRotate {
-                    0% { transform: rotate(0) scale(1); opacity: 1; }
-                    50% { transform: rotate(180deg) scale(0); opacity: 0; }
-                    100% { transform: rotate(360deg) scale(1); opacity: 1; }
+            }, [zoomedCard]);
+
+            const executeArchiveFly = (card) => {
+                if (!gridBtnRef.current) return;
+                const rect = gridBtnRef.current.getBoundingClientRect();
+                const tx = rect.left + rect.width / 2;
+                const ty = rect.top + rect.height / 2;
+                const animId = Math.random().toString(36);
+                setAnimatingCards(prev => [...prev, { ...card, animId, tx, ty }]);
+                setTimeout(() => {
+                    setAnimatingCards(prev => prev.filter(c => c.animId !== animId));
+                    setDiscardPile(prev => [...prev, card]);
+                }, 850);
+            };
+
+            const addCard = (id) => {
+                const card = GAME_DATA.cards[id];
+                if (!card || hand.some(c => String(c.id) === String(id)) || discardPile.some(c => String(c.id) === String(id))) return;
+                let currentHand = [...hand, card];
+                let toArchive = [];
+                if (AUTO_DISCARD[id]) {
+                    const idsToDiscard = AUTO_DISCARD[id];
+                    toArchive = currentHand.filter(c => idsToDiscard.some(did => String(did) === String(c.id)));
+                    currentHand = currentHand.filter(c => !idsToDiscard.some(did => String(did) === String(c.id)));
                 }
+                setHand(currentHand);
+                setMsg({ t: `Carte ${id} révélée.`, s: 'success' });
+                if (toArchive.length > 0) {
+                    if (zoomedCard) setPendingDiscards(prev => [...prev, ...toArchive]);
+                    else toArchive.forEach((c, i) => setTimeout(() => executeArchiveFly(c), i * 250));
+                }
+            };
 
-                .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
-                .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
-                .animate-shake-error { animation: shake 0.4s ease-in-out; border-color: #ef4444 !important; background: rgba(127, 29, 29, 0.4) !important; }
-                .animate-success-flash { animation: successPulse 0.4s ease-out; border-color: #10b981 !important; background: rgba(6, 78, 59, 0.4) !important; }
-                .animate-icon-transform { animation: iconRotate 0.6s ease-in-out; }
-                
-                .card-fly-overlay { position: fixed; z-index: 1000; pointer-events: none; width: 200px; aspect-ratio: 2/3; animation: archiveFly 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-                .card-ratio { aspect-ratio: 2 / 3; }
-                .selected-card { border-color: #eab308 !important; box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); transform: scale(1.02); z-index: 20; }
-                .floating-btn { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-                .no-scrollbar::-webkit-scrollbar { display: none; }
-            `}</style>
+            const solveMachine = (m, code) => {
+                if (code === GAME_DATA.codes[m.id]) {
+                    if (m.id === 'W') {
+                        setTransformingId('W');
+                        setMsg({ t: "Panneau déverrouillé !", s: 'success' });
+                        setTimeout(() => {
+                            setHand(prev => prev.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Panneau W déverrouillé", desc: "Prêt pour la manette." } : c));
+                            setTransformingId(null); setActiveMachine(null);
+                        }, 600);
+                    } else {
+                        const machineCard = hand.find(c => String(c.id) === String(m.id));
+                        setHand(prev => prev.filter(c => String(c.id) !== String(m.id)));
+                        if (machineCard) executeArchiveFly(machineCard);
+                        if (m.id === 'R') addCard(22);
+                        setActiveMachine(null); setMsg({ t: "Code accepté.", s: 'success' });
+                    }
+                    setMachineCode("");
+                } else {
+                    setMsg({ t: "ERREUR CODE !", s: 'error' });
+                    setPenaltyMinutes(prev => prev + 3); setMachineCode("");
+                }
+            };
 
-            {/* ANIMATIONS VOLANTES */}
-            {animatingCards.map(c => (
-                <div key={c.animId} className="card-fly-overlay overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900" style={{'--tx': `${c.tx}px`, '--ty': `${c.ty}px`}}>
-                    <img src={c.fallbackImg} className="w-full h-full object-cover" />
+            const handleCodeSubmit = (e) => {
+                e.preventDefault();
+                const v = inputValue.toUpperCase();
+                let targetId = null;
+                if(v === 'F') targetId = 'F';
+                else if(v === 'R' && (hand.some(c=>String(c.id)===String(86))||discardPile.some(c=>String(c.id)===String(86)))) targetId = 'R';
+                else if(GAME_DATA.cards[v]) targetId = v;
+
+                if (targetId && !hand.some(c => String(c.id) === String(targetId)) && !discardPile.some(c => String(c.id) === String(targetId))) {
+                    setCodeState('success');
+                    setTimeout(() => { setCodeState(null); addCard(targetId); }, 600);
+                } else {
+                    setCodeState('error');
+                    setPenaltyMinutes(p => p + 2);
+                    setMsg({t: "CODE INVALIDE", s: 'error'});
+                    setTimeout(() => setCodeState(null), 600);
+                }
+                setInputValue("");
+            };
+
+            const combine = (id1, id2) => {
+                const key = [id1, id2].sort((a,b) => String(a).localeCompare(String(b))).join('+');
+                const result = GAME_DATA.combinations[key];
+                if (result) {
+                    const card1 = hand.find(c => String(c.id) === String(id1));
+                    const card2 = hand.find(c => String(c.id) === String(id2));
+                    setHand(prev => prev.filter(c => String(c.id) !== String(id1) && String(c.id) !== String(id2)));
+                    if (card1) executeArchiveFly(card1);
+                    if (card2) setTimeout(() => executeArchiveFly(card2), 250);
+                    addCard(result);
+                    setMsg({ t: "Combinaison réussie !", s: 'success' });
+                } else {
+                    setMsg({ t: "Incompatible.", s: 'error' });
+                    setPenaltyMinutes(prev => prev + 1);
+                }
+                setSelectedId(null);
+            };
+
+            const revealHint = () => {
+                if (!hintConfirm) return;
+                setPenaltyMinutes(prev => prev + 5);
+                setPurchasedHints(prev => new Set(prev).add(hintConfirm.id));
+                setMsg({ t: hintConfirm.hint || "Observez bien.", s: 'info' });
+                setHintConfirm(null);
+            };
+
+            const formatTime = () => {
+                const total = time + (penaltyMinutes * 60);
+                const m = Math.floor(total / 60).toString().padStart(2, '0');
+                const s = (total % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+
+            if (!isLoaded) return (
+                <div className="fixed inset-0 bg-[#020617] flex flex-col items-center justify-center z-[9999]">
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                    <p className="text-blue-500 font-bold uppercase tracking-widest animate-pulse text-sm">Chargement...</p>
                 </div>
-            ))}
+            );
 
-            {/* HEADER */}
-            <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700 flex items-center gap-2 sticky top-2 z-50 mb-6 shadow-xl mx-2">
-                <div className="flex flex-col items-center bg-black/40 px-3 py-1.5 rounded-xl border border-slate-800 shrink-0 min-w-[75px]">
-                    <div className="flex items-center gap-1.5">
-                        <IconClock /> <span className="font-mono font-bold text-white text-base">{formatTime()}</span>
+            return (
+                <div className="flex flex-col items-center min-h-screen w-full select-none bg-[#020617] text-slate-300 overflow-hidden font-sans">
+                    {animatingCards.map(c => (
+                        <div key={c.animId} className="card-fly-overlay overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900" style={{'--tx': `${c.tx}px`, '--ty': `${c.ty}px`}}>
+                            <img src={c.fallbackImg} className="w-full h-full object-cover" />
+                        </div>
+                    ))}
+
+                    <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700 flex items-center gap-2 sticky top-2 z-50 mb-6 shadow-xl mx-2">
+                        <div className="flex flex-col items-center bg-black/40 px-3 py-1.5 rounded-xl border border-slate-800 shrink-0 min-w-[75px]">
+                            <div className="flex items-center gap-1.5"><IconClock /> <span className="font-mono font-bold text-white text-base">{formatTime()}</span></div>
+                            {penaltyMinutes > 0 && <span className="text-[9px] text-red-500 font-black tracking-tighter">PÉN: {penaltyMinutes}m</span>}
+                        </div>
+                        <form onSubmit={handleCodeSubmit} className={`flex-grow flex items-center bg-black/50 border border-slate-700 rounded-xl px-2 py-1 transition-all ${codeState === 'error' ? 'animate-shake-error' : codeState === 'success' ? 'animate-success-flash' : ''}`}>
+                            <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="CODE" className="w-full bg-transparent text-white font-black text-center text-sm outline-none placeholder:text-slate-600 uppercase tracking-widest" />
+                            <button className="ml-1 p-2 bg-blue-700 rounded-lg text-[10px] font-black uppercase text-white active:scale-90">OK</button>
+                        </form>
+                        <button ref={gridBtnRef} onClick={() => setShowArchive(true)} className="p-2.5 bg-slate-800 rounded-xl border border-slate-700 active:scale-95 text-slate-400"><IconGrid/></button>
                     </div>
-                    {penaltyMinutes > 0 && <span className="text-[9px] text-red-500 font-black tracking-tighter">PÉN: {penaltyMinutes}m</span>}
-                </div>
-                
-                <form onSubmit={handleCodeSubmit} className={`flex-grow flex items-center bg-black/50 border border-slate-700 rounded-xl px-2 py-1 transition-all ${codeState === 'error' ? 'animate-shake-error' : codeState === 'success' ? 'animate-success-flash' : ''}`}>
-                    <input 
-                        value={inputValue} 
-                        onChange={e => setInputValue(e.target.value)} 
-                        placeholder="CODE" 
-                        className="w-full bg-transparent text-white font-black text-center text-sm outline-none placeholder:text-slate-600 uppercase tracking-widest"
-                    />
-                    <button className="ml-1 p-2 bg-blue-700 rounded-lg text-[10px] font-black uppercase text-white active:scale-90 transition-transform">OK</button>
-                </form>
 
-                <button ref={gridBtnRef} onClick={() => setShowArchive(true)} className="p-2.5 bg-slate-800 rounded-xl border border-slate-700 active:scale-95 text-slate-400">
-                    <IconGrid/>
-                </button>
-            </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-lg px-3 pb-32">
+                        {hand.map(c => (
+                            <div key={c.id} className={`group relative card-ratio bg-slate-900 border-2 rounded-[1.8rem] overflow-hidden shadow-lg transition-all ${selectedId === c.id ? 'selected-card' : 'border-slate-800'}`}>
+                                <div className="w-full h-full cursor-pointer relative" onClick={() => { setZoomedCard(c); setShowZoomInfo(false); }}>
+                                    <img src={c.fallbackImg} className="w-full h-full object-cover" alt="" />
+                                    {c.id !== 'intro' && <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-4 py-1.5 font-black text-white rounded-bl-2xl border-l border-b border-white/10 text-xs shadow-xl">{c.id}</div>}
+                                    <div className="absolute bottom-3 left-0 right-0 flex justify-between px-3 gap-2">
+                                        <button onClick={(e) => { e.stopPropagation(); purchasedHints.has(c.id) ? setMsg({t: c.hint, s:'info'}) : setHintConfirm(c); }} className={`w-14 h-14 floating-btn rounded-full flex items-center justify-center shadow-xl ${purchasedHints.has(c.id) ? 'text-emerald-400' : 'text-yellow-500'}`}><IconLightbulb /></button>
+                                        {(c.type === 'red' || c.type === 'blue' || String(c.id) === '44' || c.type === 'green') && (
+                                            <button onClick={(e) => { e.stopPropagation(); if (c.type === 'green') setActiveMachine(c); else if (selectedId === null) setSelectedId(c.id); else if (selectedId === c.id) setSelectedId(null); else combine(selectedId, c.id); }} className={`w-14 h-14 floating-btn rounded-full flex items-center justify-center shadow-xl ${selectedId === c.id ? 'bg-yellow-500 text-black border-yellow-400' : 'text-white'} ${transformingId === c.id ? 'animate-icon-transform' : ''}`}>
+                                                {c.type === 'green' ? <IconSettings /> : c.type === 'red' ? <IconPuzzleMale /> : <IconPuzzleFemale />}
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
-            {/* GRILLE DE LA MAIN */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-lg px-3 pb-32">
-                {hand.map(c => {
-                    const isRed = c.type === 'red';
-                    const isBlue = c.type === 'blue' || String(c.id) === '44';
-                    const isGreen = c.type === 'green';
-                    const isTransforming = transformingId === c.id;
+                    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+                        <div className={`w-full max-w-lg mx-auto py-4 px-6 text-center text-xs font-black uppercase tracking-widest transition-colors duration-500 ${msg.s === 'error' ? 'text-red-400' : msg.s === 'success' ? 'text-emerald-400' : 'text-blue-400'}`}>
+                            {msg.t}
+                        </div>
+                    </div>
 
-                    return (
-                        <div key={c.id} className={`group relative card-ratio bg-slate-900 border-2 rounded-[1.8rem] overflow-hidden shadow-lg card-entry transition-all ${selectedId === c.id ? 'selected-card' : 'border-slate-800'}`}>
-                            <div className="w-full h-full cursor-pointer relative" onClick={() => { setZoomedCard(c); setShowZoomInfo(false); }}>
-                                <img src={c.fallbackImg} className="w-full h-full object-cover" alt="" />
-                                {c.id !== 'intro' && <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-4 py-1.5 font-black text-white rounded-bl-2xl border-l border-b border-white/10 text-xs shadow-xl">{c.id}</div>}
-                                <div className="absolute bottom-3 left-0 right-0 flex justify-between px-3 gap-2">
-                                    <button 
-                                        onClick={(e) => { e.stopPropagation(); purchasedHints.has(c.id) ? setMsg({t: c.hint, s:'info'}) : setHintConfirm(c); }} 
-                                        className={`w-14 h-14 floating-btn rounded-full flex items-center justify-center shadow-xl active:scale-90 ${purchasedHints.has(c.id) ? 'text-emerald-400 border-emerald-500/50' : 'text-yellow-500'}`}
-                                    >
-                                        <IconLightbulb />
-                                    </button>
-                                    {(isRed || isBlue || isGreen) && (
-                                        <button 
-                                            onClick={(e) => { 
-                                                e.stopPropagation(); 
-                                                if (isGreen) setActiveMachine(c); 
-                                                else if (selectedId === null) setSelectedId(c.id);
-                                                else if (selectedId === c.id) setSelectedId(null);
-                                                else combine(selectedId, c.id);
-                                            }} 
-                                            className={`w-14 h-14 floating-btn rounded-full flex items-center justify-center shadow-xl active:scale-90 ${selectedId === c.id ? 'bg-yellow-500 text-black border-yellow-400' : 'text-white'} ${isTransforming ? 'animate-icon-transform' : ''}`}
-                                        >
-                                            {isGreen ? <IconSettings /> : isRed ? <IconPuzzleMale /> : <IconPuzzleFemale />}
-                                        </button>
-                                    )}
+                    {hintConfirm && (
+                        <div className="fixed inset-0 z-[300] bg-black/85 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
+                            <div className="bg-slate-900 border-2 border-yellow-600 p-8 rounded-[2.5rem] w-full max-w-xs text-center shadow-2xl animate-slide-up">
+                                <div className="w-16 h-16 bg-yellow-900/20 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6"><IconLightbulb /></div>
+                                <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tighter">Indice Tactique</h3>
+                                <p className="text-slate-400 text-sm mb-8 leading-relaxed">Pénalité de <span className="text-red-500 font-bold text-lg">5m</span>.</p>
+                                <button onClick={revealHint} className="w-full py-4 bg-yellow-600 text-black font-black rounded-2xl uppercase tracking-widest text-xs mb-3 shadow-lg">Acheter</button>
+                                <button onClick={() => setHintConfirm(null)} className="w-full py-3 text-slate-500 font-bold text-xs uppercase">Retour</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {zoomedCard && (
+                        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center animate-fade-in" onClick={() => setShowZoomInfo(!showZoomInfo)}>
+                            <div className="w-full h-full relative flex items-center justify-center p-0">
+                                <img src={zoomedCard.fallbackImg} className="max-h-[100vh] max-w-full object-contain" />
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); setZoomedCard(null); }} className="absolute top-6 right-6 bg-black/40 backdrop-blur-md p-4 rounded-full text-white z-[110] border border-white/10"><IconX/></button>
+                            <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 p-6 sm:p-8 rounded-t-[3rem] shadow-2xl transition-transform duration-300 ${showZoomInfo ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+                                <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6" onClick={() => setShowZoomInfo(false)}></div>
+                                <h2 className="text-2xl font-black mb-1 uppercase tracking-tighter text-white border-b border-slate-800 pb-3 inline-block">{zoomedCard.title}</h2>
+                                <p className="text-slate-400 text-base mb-10 leading-snug font-medium">{zoomedCard.desc}</p>
+                                <div className="flex flex-col gap-3 w-full max-w-md mx-auto pb-4">
+                                    {zoomedCard.reveals?.filter(id => !hand.some(c=>String(c.id)===String(id)) && !discardPile.some(c=>String(c.id)===String(id))).map(id => (
+                                        <button key={id} onClick={() => { addCard(id); if (id === 5 || zoomedCard.reveals.filter(rid => !hand.some(c=>String(c.id)===String(rid)) && !discardPile.some(c=>String(c.id)===String(rid))).length <= 1) setZoomedCard(null); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-sm"><IconHand /> {id === 'T' ? "Prendre le Talisman" : id === 15 ? "Prendre l'Épingle" : `Prendre carte ${id}`}</button>
+                                    ))}
+                                    <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest">Observation seule</button>
+                                </div>
+                            </div>
+                            {!showZoomInfo && <button onClick={(e) => { e.stopPropagation(); setShowZoomInfo(true); }} className="absolute bottom-20 bg-slate-900/90 backdrop-blur-md px-8 py-4 rounded-full border border-slate-700 text-xs font-black uppercase tracking-widest text-white animate-fade-in shadow-2xl flex items-center gap-3">Afficher les infos <IconSearch /></button>}
+                        </div>
+                    )}
+
+                    {activeMachine && (
+                        <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 animate-fade-in" onClick={() => setActiveMachine(null)}>
+                            <div className="bg-slate-900 border-2 border-emerald-500 p-8 rounded-[3rem] max-w-xs w-full shadow-2xl" onClick={e=>e.stopPropagation()}>
+                                <h3 className="text-emerald-400 font-black mb-6 flex items-center gap-3 uppercase text-center justify-center text-xl tracking-tighter"><IconSettings/> {activeMachine.title}</h3>
+                                <input autoFocus value={machineCode} onChange={e => setMachineCode(e.target.value.replace(/\D/g,'').slice(0,4))} onKeyDown={e => e.key === 'Enter' && solveMachine(activeMachine, machineCode)} placeholder="----" className="w-full bg-black/60 border border-slate-800 rounded-2xl p-8 mb-10 text-center text-6xl font-mono text-emerald-500 outline-none tracking-[10px]" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-xs">Annuler</button>
+                                    <button onClick={() => solveMachine(activeMachine, machineCode)} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-xs">Valider</button>
                                 </div>
                             </div>
                         </div>
-                    );
-                })}
-            </div>
+                    )}
 
-            {/* BANDEAU NARRATIF FIXE */}
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-700 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-                <div className={`w-full max-w-lg mx-auto py-4 px-6 text-center text-xs font-black uppercase tracking-widest transition-colors duration-500 ${msg.s === 'error' ? 'text-red-400' : msg.s === 'success' ? 'text-emerald-400' : 'text-blue-400'}`}>
-                    {msg.t}
-                </div>
-            </div>
-
-            {/* CONFIRMATION INDICE */}
-            {hintConfirm && (
-                <div className="fixed inset-0 z-[300] bg-black/85 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
-                    <div className="bg-slate-900 border-2 border-yellow-600 p-8 rounded-[2.5rem] w-full max-w-xs text-center shadow-2xl animate-slide-up">
-                        <div className="w-16 h-16 bg-yellow-900/20 text-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6"><IconLightbulb /></div>
-                        <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tighter">Indice Tactique</h3>
-                        <p className="text-slate-400 text-sm mb-8 leading-relaxed">Consulter cet indice coûte <span className="text-red-500 font-bold text-lg">5m de pénalité</span>.</p>
-                        <button onClick={revealHint} className="w-full py-4 bg-yellow-600 text-black font-black rounded-2xl uppercase tracking-widest text-xs mb-3 shadow-lg">Acheter l'indice</button>
-                        <button onClick={() => setHintConfirm(null)} className="w-full py-3 text-slate-500 font-bold text-xs uppercase hover:text-white">Retour</button>
-                    </div>
-                </div>
-            )}
-
-            {/* ZOOM PLEIN ÉCRAN */}
-            {zoomedCard && (
-                <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center animate-fade-in" onClick={() => setShowZoomInfo(!showZoomInfo)}>
-                    <div className="w-full h-full relative flex items-center justify-center p-0">
-                        <img src={zoomedCard.fallbackImg} className="max-h-[100vh] max-w-full object-contain shadow-[0_0_50px_rgba(0,0,0,0.8)]" />
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); setZoomedCard(null); }} className="absolute top-6 right-6 bg-black/40 backdrop-blur-md p-4 rounded-full text-white z-[110] border border-white/10 active:scale-90"><IconX/></button>
-                    <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800 p-6 sm:p-8 rounded-t-[3rem] shadow-2xl transition-transform duration-300 ${showZoomInfo ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-                        <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6" onClick={() => setShowZoomInfo(false)}></div>
-                        <h2 className="text-2xl font-black mb-1 uppercase tracking-tighter text-white border-b border-slate-800 pb-3 inline-block">{zoomedCard.title}</h2>
-                        <p className="text-slate-400 text-base mb-10 leading-snug font-medium">{zoomedCard.desc}</p>
-                        <div className="flex flex-col gap-3 w-full max-w-md mx-auto pb-4">
-                            {zoomedCard.reveals?.filter(id => !hand.some(c=>String(c.id)===String(id)) && !discardPile.some(c=>String(c.id)===String(id))).map(id => (
-                                <button key={id} onClick={() => { addCard(id); if (id === 5 || zoomedCard.reveals.filter(rid => !hand.some(c=>String(c.id)===String(rid)) && !discardPile.some(c=>String(c.id)===String(rid))).length <= 1) setZoomedCard(null); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest text-sm"><IconHand /> {id === 'T' ? "Prendre le Talisman" : id === 15 ? "Prendre l'Épingle" : `Prendre carte ${id}`}</button>
-                            ))}
-                            <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest">Observation seule</button>
+                    {showArchive && (
+                        <div className="fixed inset-0 z-[200] bg-black/98 p-4 overflow-y-auto no-scrollbar animate-fade-in" onClick={() => setShowArchive(false)}>
+                            <div className="max-w-xl mx-auto bg-slate-900 rounded-[3.5rem] p-10 border border-slate-700 relative shadow-2xl" onClick={e=>e.stopPropagation()}>
+                                <div className="flex justify-between items-center mb-10">
+                                    <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Archives</h2>
+                                    <button onClick={() => setShowArchive(false)} className="p-3 hover:bg-slate-800 rounded-full transition-colors"><IconX/></button>
+                                </div>
+                                <div className="grid grid-cols-3 gap-4">
+                                    {ALL_IDS.map(id => {
+                                        const inH = hand.find(x=>String(x.id)===String(id));
+                                        const inD = discardPile.find(x=>String(x.id)===String(id));
+                                        const card = GAME_DATA.cards[id];
+                                        return (
+                                            <div key={id} className={`aspect-[2/3] border-2 rounded-2xl flex items-center justify-center relative overflow-hidden ${inH ? 'border-blue-500 bg-slate-800 shadow-[0_0_10px_rgba(59,130,246,0.3)]' : inD ? 'border-red-900 bg-black/40 opacity-40' : 'border-slate-800 opacity-5'}`}>
+                                                {(inH || inD) && card && <img src={card.fallbackImg} className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale" />}
+                                                <span className="font-black z-10 text-white text-lg">{id==='intro'?'I':id}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    {!showZoomInfo && (
-                        <button onClick={(e) => { e.stopPropagation(); setShowZoomInfo(true); }} className="absolute bottom-20 bg-slate-900/90 backdrop-blur-md px-8 py-4 rounded-full border border-slate-700 text-xs font-black uppercase tracking-widest text-white animate-fade-in shadow-2xl flex items-center gap-3">Afficher les infos <IconSearch /></button>
                     )}
                 </div>
-            )}
-
-            {/* MODAL MACHINE */}
-            {activeMachine && (
-                <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 animate-fade-in" onClick={() => setActiveMachine(null)}>
-                    <div className="bg-slate-900 border-2 border-emerald-500 p-8 rounded-[3rem] max-w-xs w-full shadow-2xl" onClick={e=>e.stopPropagation()}>
-                        <h3 className="text-emerald-400 font-black mb-6 flex items-center gap-3 uppercase text-center justify-center text-xl tracking-tighter"><IconSettings/> {activeMachine.title}</h3>
-                        <input autoFocus value={machineCode} onChange={e => setMachineCode(e.target.value.replace(/\D/g,'').slice(0,4))} onKeyDown={e => e.key === 'Enter' && solveMachine(activeMachine, machineCode)} placeholder="----" className="w-full bg-black/60 border border-slate-800 rounded-2xl p-8 mb-10 text-center text-6xl font-mono text-emerald-500 outline-none tracking-[10px]" />
-                        <div className="grid grid-cols-2 gap-4">
-                            <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-xs">Annuler</button>
-                            <button onClick={() => solveMachine(activeMachine, machineCode)} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-xs">Valider</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* ARCHIVES */}
-            {showArchive && (
-                <div className="fixed inset-0 z-[200] bg-black/98 p-4 overflow-y-auto no-scrollbar animate-fade-in" onClick={() => setShowArchive(false)}>
-                    <div className="max-w-xl mx-auto bg-slate-900 rounded-[3.5rem] p-10 border border-slate-700 relative shadow-2xl" onClick={e=>e.stopPropagation()}>
-                        <div className="flex justify-between items-center mb-10">
-                            <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Archives</h2>
-                            <button onClick={() => setShowArchive(false)} className="p-3 hover:bg-slate-800 rounded-full transition-colors"><IconX/></button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {ALL_IDS.map(id => {
-                                const inH = hand.find(x=>String(x.id)===String(id));
-                                const inD = discardPile.find(x=>String(x.id)===String(id));
-                                const card = GAME_DATA.cards[id];
-                                return (
-                                    <div key={id} className={`aspect-[2/3] border-2 rounded-2xl flex items-center justify-center relative overflow-hidden ${inH ? 'border-blue-500 bg-slate-800 shadow-[0_0_10px_rgba(59,130,246,0.3)]' : inD ? 'border-red-900 bg-black/40 opacity-40' : 'border-slate-800 opacity-5'}`}>
-                                        {(inH || inD) && card && <img src={card.fallbackImg} className="absolute inset-0 w-full h-full object-cover opacity-20 grayscale" />}
-                                        <span className="font-black z-10 text-white text-lg">{id==='intro'?'I':id}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
+            );
+        }
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

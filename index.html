@@ -1,0 +1,686 @@
+
+import { 
+  Clock, 
+  Check, 
+  Lock, 
+  Zap, 
+  Search as SearchIcon, 
+  Lightbulb, 
+  Image as ImageIcon, 
+  Archive, 
+  AlertTriangle, 
+  X, 
+  PlayCircle, 
+  Eye, 
+  Hand, 
+  Grid, 
+  HelpCircle, 
+  Puzzle, 
+  Settings, 
+  Key 
+} from 'lucide-react';
+
+/* --- CONFIGURATION --- */
+const GITHUB_BASE_URL = ""; 
+const IMAGE_EXTENSION = ".png";
+
+/* --- STYLE CSS --- */
+const styles = `
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+.icon-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes collect-item {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2) translateY(-10px); opacity: 0.5; }
+  100% { transform: scale(0); opacity: 0; }
+}
+.animate-collect {
+  animation: collect-item 0.4s forwards cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reveal-btn {
+  transition: all 0.2s ease;
+}
+.reveal-btn:active {
+  transform: scale(0.9);
+}
+
+.machine-modal-enter {
+  animation: slide-up 0.3s ease-out;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+`;
+
+/* --- RÈGLES D'ARCHIVAGE --- */
+const AUTO_DISCARD_RULES = {
+  5: ['intro'],    
+  86: [5, 44, 42], 
+  73: [15, 58],    
+  30: [8, 22],     
+  'F': [] 
+};
+
+const ALL_GAME_CARD_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 37, 42, 43, 44, 52, 58, 73, 86, 88, 99, 141, 'F'];
+
+const GAME_DATA = {
+  startingCards: ['intro'], 
+  cards: {
+    'intro': {
+      id: 'intro',
+      type: 'grey',
+      title: "Mission",
+      desc: "New York, 1931. Don Bailat a fait appel à vous. Vous devez voler un produit révolutionnaire à la multinationale 2M4GD CORP. Tout le matériel est planqué sur place. Rendez-vous sur la 5ème avenue !",
+      reveals: [5], 
+      fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20intro%20Don%20bailat.png"
+    },
+    5: {
+      id: 5,
+      type: 'grey',
+      title: "5ème Avenue",
+      desc: "Le lieu du rendez-vous. Il pleut à verse. Le majestueux Flatiron Building se dresse devant vous au numéro 44. Inspectez minutieusement les lieux pour trouver votre équipement...",
+      hint: "Une lettre est cachée dans le décor. Si vous la trouvez, entrez-la comme un code.",
+      fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png"
+    },
+    'F': {
+      id: 'F',
+      type: 'grey',
+      title: "Sacoche de Matériel",
+      desc: "Une sacoche en cuir noir déposée par votre contact. Elle contient tout le nécessaire pour l'opération.",
+      hint: "Ouvrez la sacoche (Zoom) pour prendre son contenu (cartes 8, 37, 42).",
+      reveals: [8, 37, 42], 
+      fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20F%20sacoche.png"
+    },
+    44: {
+      id: 44,
+      type: 'grey',
+      title: "Fenêtre Ouverte",
+      desc: "Une fenêtre est ouverte là-haut. Trop haut pour grimper sans aide. Il vous faut un objet pour l'atteindre.",
+      reveals: [], 
+      specialIcon: 'blue', 
+      fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/44%20carte%20appartement.png"
+    },
+    86: {
+      id: 86,
+      type: 'grey',
+      title: "QG 2M4GD Corp",
+      desc: "Vous êtes entré ! La pièce est plongée dans la pénombre. Vous distinguez plusieurs éléments.",
+      reveals: [11, 25, 58, 22], 
+      fallbackImg: "https://placehold.co/400x300/2d3748/FFFFFF?text=Bureau+General+(86)"
+    },
+    8: {
+      id: 8,
+      type: 'red',
+      title: "Pied-de-biche",
+      desc: "Un outil robuste pour forcer les ouvertures récalcitrantes.",
+      fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%208%20pied%20de%20biche.png"
+    },
+    15: {
+      id: 15,
+      type: 'red',
+      title: "Épingle",
+      desc: "Idéale pour crocheter des serrures fines.",
+      fallbackImg: "https://placehold.co/400x300/9b2c2c/FFFFFF?text=Epingle+(15)"
+    },
+    42: {
+      id: 42,
+      type: 'red',
+      title: "Grappin",
+      desc: "Une corde solide avec un crochet.",
+      // MISE À JOUR : LIEN RAW GITHUB POUR LE GRAPPIN
+      fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2042%20grappin.png"
+    },
+    37: {
+      id: 37,
+      type: 'red',
+      title: "Manette",
+      desc: "Une poignée isolante pour panneau électrique.",
+      fallbackImg: "https://placehold.co/400x300/e53e3e/FFFFFF?text=Manette+(37)"
+    },
+    11: {
+      id: 11,
+      type: 'grey', 
+      title: "Tapis",
+      desc: "Un motif étrange : Un aigle (Serpentarius) tient un serpent dans ses serres.",
+      fallbackImg: "https://placehold.co/400x300/4a5568/FFFFFF?text=Tapis+Aigle/Serpent+(11)"
+    },
+    58: {
+      id: 58,
+      type: 'blue',
+      title: "Bibliothèque",
+      desc: "Fermée à clef. Il y a une serrure.",
+      fallbackImg: "https://placehold.co/400x300/2b6cb0/FFFFFF?text=Bibliotheque+(58)"
+    },
+    25: {
+      id: 25,
+      type: 'green',
+      title: "Porte Blindée",
+      desc: "Un digicode protège l'ouverture. Quel est le code ?",
+      hint: "Le code est lié aux animaux du tapis (11) et aux chiffres de la page (73). Ordre : Haut vers le Bas.",
+      fallbackImg: "https://placehold.co/400x300/276749/FFFFFF?text=Porte+Blindee+(25)"
+    },
+    141: { 
+      id: 141,
+      type: 'green',
+      title: "Tableau Élec (W)",
+      desc: "Additionnez les connecteurs : Bleu(+1), Rouge(+3), Jaune(+2).",
+      hint: "Utilisez la manette (37) et entrez le résultat de l'addition.",
+      fallbackImg: "https://placehold.co/400x300/2f855a/FFFFFF?text=Panneau+Elec+(141)"
+    },
+    22: {
+      id: 22,
+      type: 'blue',
+      title: "Caisse en bois",
+      desc: "Une caisse clouée. Il faut forcer.",
+      fallbackImg: "https://placehold.co/400x300/744210/FFFFFF?text=Caisse+Bois+(22)"
+    },
+    73: {
+      id: 73,
+      type: 'grey',
+      title: "Page & Note",
+      desc: "Serpentarius = 95, Serpens = 89.",
+      fallbackImg: "https://placehold.co/400x300/a0aec0/FFFFFF?text=Indices+Animaux+(73)"
+    },
+    43: {
+      id: 43,
+      type: 'grey',
+      title: "Courant Coupé",
+      desc: "L'alarme est désactivée. Le portrait n'est plus protégé.",
+      fallbackImg: "https://placehold.co/400x300/a0aec0/000000?text=Alarme+OFF+(43)"
+    },
+    30: {
+      id: 30,
+      type: 'gold', 
+      title: "Jeu Unlock!",
+      desc: "Vous avez trouvé le prototype ! Mission accomplie.",
+      fallbackImg: "https://placehold.co/400x300/d69e2e/FFFFFF?text=BOITE+DE+JEU+(30)"
+    }
+  },
+
+  combinations: {
+    "15+58": 73,  
+    "37+141": 43, 
+    "8+22": 30,   
+    "42+44": 86,  
+  },
+
+  codes: {
+    141: "6",     
+    25: "9589"    
+  }
+};
+
+export default function App() {
+  const [hand, setHand] = useState([]); 
+  const [discardPile, setDiscardPile] = useState([]); 
+  const [inputValue, setInputValue] = useState(""); 
+  const [selectedCard, setSelectedCard] = useState(null); 
+  const [zoomedCard, setZoomedCard] = useState(null);
+  const [activeMachine, setActiveMachine] = useState(null); 
+  const [machineCodeInput, setMachineCodeInput] = useState(""); 
+  const [message, setMessage] = useState({ text: "Bienvenue Agent.", type: 'info' });
+  const [time, setTime] = useState(0);
+  const [penalty, setPenalty] = useState(0);
+  const [showPenaltyAlert, setShowPenaltyAlert] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+  const [showCardTable, setShowCardTable] = useState(false); 
+  const [cardHint, setCardHint] = useState(null);
+  const [collectingIds, setCollectingIds] = useState([]); 
+
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const initialCards = GAME_DATA.startingCards.map(id => GAME_DATA.cards[id]).filter(Boolean);
+    setHand(initialCards);
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (!gameWon) setTime(t => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [gameWon]);
+
+  useEffect(() => {
+    if(inputRef.current) inputRef.current.focus();
+  }, [hand]);
+
+  useEffect(() => {
+    if (showPenaltyAlert) {
+      const timer = setTimeout(() => setShowPenaltyAlert(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showPenaltyAlert]);
+
+  const getCardImage = (card) => {
+    if (!card) return "";
+    if (GITHUB_BASE_URL && GITHUB_BASE_URL.trim() !== "" && !card.fallbackImg.startsWith("http")) {
+      const baseUrl = GITHUB_BASE_URL.endsWith('/') ? GITHUB_BASE_URL : `${GITHUB_BASE_URL}/`;
+      return `${baseUrl}${card.id}${IMAGE_EXTENSION}`;
+    }
+    return card.fallbackImg;
+  };
+
+  const triggerPenalty = (minutes = 1) => {
+    setPenalty(p => p + minutes);
+    setShowPenaltyAlert(true);
+  };
+
+  const addCard = (id, fromZoom = false) => {
+    const cardData = GAME_DATA.cards[id];
+    
+    if (hand.find(c => c.id === id) || discardPile.find(c => c.id === id)) {
+      showMessage(`Carte ${id} déjà connue.`, 'warning');
+      return;
+    }
+    
+    if (cardData) {
+      if (fromZoom) {
+        setCollectingIds(prev => [...prev, id]);
+        setTimeout(() => {
+          setCollectingIds(prev => prev.filter(cid => cid !== id));
+        }, 400);
+      }
+
+      let newHand = [...hand, cardData];
+      let newDiscard = [...discardPile];
+      
+      if (AUTO_DISCARD_RULES[id]) {
+        const cardsToRemove = AUTO_DISCARD_RULES[id];
+        if (selectedCard && cardsToRemove.includes(selectedCard)) setSelectedCard(null);
+
+        const keptCards = newHand.filter(c => !cardsToRemove.includes(c.id));
+        const removedCards = newHand.filter(c => cardsToRemove.includes(c.id));
+        
+        newHand = keptCards;
+        newDiscard = [...newDiscard, ...removedCards];
+      }
+
+      setHand(newHand);
+      setDiscardPile(newDiscard);
+      showMessage(`Carte ${id} révélée.`, 'success');
+      setSelectedCard(null); 
+      
+      if (!fromZoom || id === 5) {
+        setZoomedCard(null); 
+      }
+    } else {
+      showMessage(`Carte ${id} introuvable.`, 'error');
+      triggerPenalty(1);
+    }
+  };
+
+  const discardCard = (id) => {
+    const card = hand.find(c => c.id === id);
+    if (!card) return;
+    setHand(prev => prev.filter(c => c.id !== id));
+    setDiscardPile(prev => [...prev, card]);
+    if (selectedCard === id) setSelectedCard(null);
+  };
+
+  const handleInputSubmit = (e) => {
+    e.preventDefault();
+    const val = inputValue.trim().toUpperCase(); 
+    if (!val) return;
+
+    if (val === 'F') {
+        addCard('F'); 
+        showMessage("Cachette trouvée !", 'success');
+        setInputValue("");
+        return;
+    }
+
+    const num = parseInt(val);
+    if (!isNaN(num)) {
+      if (GAME_DATA.cards[num]) {
+        addCard(num);
+      } else {
+        showMessage(`Erreur : ${val} incorrect.`, 'error');
+        triggerPenalty(1);
+      }
+    } else {
+      showMessage("Code invalide.", 'error');
+    }
+    setInputValue("");
+  };
+
+  const solveMachine = (machine, codeEntered) => {
+    const correctCode = GAME_DATA.codes[machine.id];
+    if (codeEntered === correctCode) {
+      if (machine.id === 141) { 
+        discardCard(141); 
+        addCard(43); 
+        showMessage("Panneau OK ! Carte 43 révélée.", 'success');
+      } else if (machine.id === 25) { 
+        discardCard(25); 
+        addCard(22); 
+        showMessage("Coffre ouvert ! Caisse (22) trouvée.", 'success');
+      }
+      setActiveMachine(null);
+      setMachineCodeInput("");
+    } else {
+      showMessage("Code machine incorrect !", 'error');
+      triggerPenalty(1);
+      setMachineCodeInput("");
+    }
+  };
+
+  const handleImageClick = (card) => {
+    if (selectedCard && selectedCard !== card.id) {
+       attemptCombine(selectedCard, card.id);
+    } else {
+       setZoomedCard(card);
+    }
+  };
+
+  const handleCardClick = (card) => {
+    if (card.type === 'green') {
+      setActiveMachine(card);
+      return;
+    }
+
+    if (selectedCard === null) {
+      setSelectedCard(card.id);
+    } else if (selectedCard === card.id) {
+      setSelectedCard(null);
+    } else {
+      attemptCombine(selectedCard, card.id);
+    }
+  };
+
+  const attemptCombine = (id1, id2) => {
+    const sortedKeys = [id1, id2].sort((a, b) => {
+        const numA = parseInt(a);
+        const numB = parseInt(b);
+        if(!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.toString().localeCompare(b.toString());
+    }).join('+');
+
+    if (GAME_DATA.combinations[sortedKeys]) {
+      const resultId = GAME_DATA.combinations[sortedKeys];
+      discardCard(id1); 
+      discardCard(id2); 
+      addCard(resultId);
+      showMessage(`Combinaison réussie !`, 'success');
+      if (resultId === 30) setGameWon(true); 
+    } else {
+      showMessage(`Rien ne se passe (${id1} + ${id2}).`, 'error');
+      triggerPenalty(1);
+    }
+    setSelectedCard(null);
+  };
+
+  const showMessage = (text, type = 'info') => {
+    setMessage({ text, type });
+  };
+
+  const minutes = Math.floor((time + penalty * 60) / 60);
+  const seconds = (time + penalty * 60) % 60;
+  const timeDisplay = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  const getCardStyle = (type) => {
+    switch(type) {
+      case 'red': return 'border-red-500/50 bg-slate-900';
+      case 'blue': return 'border-blue-500/50 bg-slate-900';
+      case 'green': return 'border-emerald-500/50 bg-slate-900';
+      case 'gold': return 'border-yellow-500/50 bg-slate-900';
+      default: return 'border-slate-600 bg-slate-900';
+    }
+  };
+
+  const getCardIcon = (card) => {
+    if (card.id === 44 || card.specialIcon === 'blue') return <Puzzle size={20} className="text-blue-400" />;
+    switch(card.type) {
+      case 'red': return <Puzzle size={20} className="text-red-400" />;
+      case 'blue': return <Puzzle size={20} className="text-blue-400" />;
+      case 'green': return <Settings size={20} className="text-emerald-400" />;
+      case 'gold': return <Lock size={20} className="text-yellow-400" />;
+      default: return null; 
+    }
+  };
+
+  const getCardTextColor = (type) => {
+    switch(type) {
+      case 'red': return 'text-red-400';
+      case 'blue': return 'text-blue-400';
+      case 'green': return 'text-emerald-400';
+      case 'gold': return 'text-yellow-400';
+      default: return 'text-slate-400';
+    }
+  };
+
+  const getAllCardsForTable = () => {
+    return ALL_GAME_CARD_IDS.sort((a, b) => {
+      if (a === 'intro') return -1;
+      if (b === 'intro') return 1;
+      const numA = parseInt(a);
+      const numB = parseInt(b);
+      if (isNaN(numA)) return 1; 
+      if (isNaN(numB)) return -1;
+      return numA - numB;
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0f172a] text-slate-300 p-2 font-sans flex flex-col items-center relative overflow-hidden">
+      <style>{styles}</style>
+      
+      {/* ALERTE PENALITE */}
+      {showPenaltyAlert && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-red-900/60 backdrop-blur-sm">
+          <div className="bg-red-600 text-white p-6 rounded-2xl shadow-2xl border-4 border-red-400 animate-bounce flex flex-col items-center">
+            <AlertTriangle size={48} className="mb-2" />
+            <h2 className="text-3xl font-black uppercase">Pénalité !</h2>
+            <p className="text-lg font-mono">+1 Minute</p>
+          </div>
+        </div>
+      )}
+
+      {/* TABLEAU DES CARTES */}
+      {showCardTable && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in" onClick={() => setShowCardTable(false)}>
+          <div className="relative max-w-5xl w-full h-[90vh] bg-slate-900 rounded-2xl border border-slate-700 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Grid size={24} /> Tableau des Cartes
+              </h2>
+              <button onClick={() => setShowCardTable(false)} className="text-slate-400 hover:text-white p-2 rounded-full hover:bg-slate-700 transition-colors">
+                <X size={24} />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-4">
+              {getAllCardsForTable().map(id => {
+                const cardData = GAME_DATA.cards[id];
+                const isRevealed = hand.some(c => c.id === id);
+                const isArchived = discardPile.some(c => c.id === id);
+                const isUnknown = !isRevealed && !isArchived;
+                const textColorClass = isUnknown ? 'text-slate-700' : getCardTextColor(cardData?.type);
+
+                return (
+                  <div key={id} className={`relative aspect-[2/3] rounded-xl flex flex-col items-center justify-center border-2 overflow-hidden transition-all ${
+                    isRevealed && !isArchived
+                      ? 'bg-slate-700 border-slate-400 shadow-lg scale-105' 
+                      : isArchived 
+                        ? 'bg-black/50 border-slate-800 grayscale'
+                        : 'bg-slate-900 border-slate-800 opacity-60' 
+                  }`}>
+                    {isUnknown ? (
+                      <div className="flex flex-col items-center">
+                        <span className="text-2xl font-bold text-slate-700">?</span>
+                        <span className="text-[10px] text-slate-600 mt-1">{id}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <img src={getCardImage(cardData)} alt={`Carte ${id}`} className={`absolute inset-0 w-full h-full object-cover ${isArchived ? 'opacity-40 grayscale' : 'opacity-100'}`} />
+                        <div className="absolute top-0 right-0 bg-black/70 px-2 py-1 rounded-bl-lg">
+                           <span className={`font-black text-sm ${isArchived ? 'text-slate-400 line-through' : textColorClass}`}>{id === 'intro' ? 'Intro' : id}</span>
+                        </div>
+                        {isArchived && <div className="absolute inset-0 flex items-center justify-center bg-black/20"><span className="text-[10px] uppercase font-bold text-slate-300 bg-black/60 px-2 py-1 rounded border border-slate-600">Archivé</span></div>}
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="p-4 bg-slate-800 border-t border-slate-700 text-center text-xs text-slate-400">
+              <p>Légende : <span className="text-white font-bold">Image Couleur</span> = En Main | <span className="text-slate-500">Image Grise</span> = Archivé | <span className="text-slate-700 font-black">?</span> = Inconnu</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL MACHINE */}
+      {activeMachine && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setActiveMachine(null)}>
+           <div className="bg-slate-900 border-2 border-emerald-500 rounded-2xl p-6 max-w-sm w-full shadow-2xl machine-modal-enter" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-6">
+                 <h3 className="text-emerald-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Settings className="animate-spin-slow" size={20} /> Machine {activeMachine.id}
+                 </h3>
+                 <button onClick={() => setActiveMachine(null)}><X className="text-slate-500 hover:text-white" /></button>
+              </div>
+              <p className="text-slate-400 text-sm mb-4 text-center">{activeMachine.desc}</p>
+              
+              <div className="bg-black/50 border-2 border-slate-700 rounded-xl p-4 mb-6">
+                 <input 
+                    autoFocus
+                    type="text"
+                    value={machineCodeInput}
+                    onChange={(e) => setMachineCodeInput(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onKeyDown={(e) => e.key === 'Enter' && solveMachine(activeMachine, machineCodeInput)}
+                    placeholder="----"
+                    className="w-full bg-transparent text-center text-4xl font-mono tracking-[10px] text-emerald-500 outline-none placeholder:text-slate-800"
+                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                 <button onClick={() => setActiveMachine(null)} className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg transition-colors">Annuler</button>
+                 <button onClick={() => solveMachine(activeMachine, machineCodeInput)} className="py-3 bg-emerald-600 hover:bg-emerald-500 text-black font-bold rounded-lg shadow-lg transition-all active:scale-95">Valider</button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* MODAL ZOOM / FOUILLE */}
+      {zoomedCard && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/90 p-4" onClick={() => setZoomedCard(null)}>
+          <div className="relative max-w-4xl w-full h-[85vh] flex flex-col bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setZoomedCard(null)} className="absolute top-4 right-4 z-[100] bg-black/50 text-white p-2 rounded-full hover:bg-red-600 transition-colors">
+              <X size={24} />
+            </button>
+            <div className="flex-grow flex items-center justify-center bg-black overflow-hidden">
+              <img src={getCardImage(zoomedCard)} alt={zoomedCard.title} className="max-w-full max-h-full object-contain" />
+            </div>
+            <div className="p-6 bg-slate-800 border-t border-slate-700 shrink-0">
+               <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-white uppercase tracking-wide">{zoomedCard.title}</h2>
+                  <span className="text-3xl font-black text-slate-600">#{zoomedCard.id === 'intro' ? '' : zoomedCard.id}</span>
+               </div>
+               <p className="text-slate-300 text-lg mb-6 leading-relaxed font-serif">{zoomedCard.desc}</p>
+               {zoomedCard.reveals && zoomedCard.reveals.length > 0 && (
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {zoomedCard.reveals.map(id => {
+                      if (hand.some(c => c.id === id) || discardPile.some(c => c.id === id)) return null;
+                      return (
+                        <button key={id} onClick={() => addCard(id, true)} className={`reveal-btn px-6 py-3 rounded-lg font-bold shadow-xl border-2 flex items-center gap-2 ${collectingIds.includes(id) ? 'animate-collect opacity-0' : 'bg-slate-700 border-slate-500 text-white hover:bg-slate-600'}`}>
+                          <Hand size={18} /> {id === 5 ? "Commencer l'Aventure" : `Prendre la carte ${id}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER / STATUS BAR */}
+      <div className="w-full max-w-6xl bg-slate-900/90 p-3 rounded-xl shadow-lg border border-slate-700 flex flex-wrap items-center gap-3 mb-4 sticky top-1 z-50">
+        <div className="flex items-center gap-2 bg-black/40 px-3 py-2 rounded-lg border border-slate-700 shrink-0">
+             <Clock size={16} className="text-red-500"/>
+             <span className="text-xl font-mono font-bold text-white">{timeDisplay}</span>
+             {penalty > 0 && <span className="text-xs text-red-500 font-bold">(+{penalty})</span>}
+        </div>
+        <div className={`flex-grow py-2 px-4 rounded text-center text-sm font-bold shadow transition-colors duration-300 ${
+            message.type === 'error' ? 'bg-red-900/50 text-red-200 border border-red-800' :
+            message.type === 'success' ? 'bg-emerald-900/50 text-emerald-200 border border-emerald-800' :
+            'bg-blue-900/30 text-blue-200 border border-blue-800'
+        }`}>
+            {message.text}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => setShowCardTable(true)} className="bg-blue-900/50 hover:bg-blue-800 border border-blue-700 text-blue-200 p-2 rounded-lg transition-colors">
+            <Grid size={20} />
+          </button>
+          <form onSubmit={handleInputSubmit} className="flex relative">
+            <input ref={inputRef} type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} placeholder="Code..." className="w-24 bg-black/50 border border-slate-600 rounded-l-lg py-2 px-3 text-white focus:border-red-500 focus:outline-none" />
+            <button type="submit" className="bg-red-700 hover:bg-red-600 text-white px-3 rounded-r-lg font-bold">OK</button>
+          </form>
+        </div>
+      </div>
+
+      {/* PLATEAU */}
+      <div className="w-full max-w-[1400px] flex-grow pb-12">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {hand.map(card => {
+              const isSelected = selectedCard === card.id;
+              const borderClass = getCardStyle(card.type);
+              return (
+                <div key={card.id} className={`relative group flex flex-col rounded-lg overflow-hidden transition-all duration-200 border-2 shadow-xl bg-black ${borderClass} ${isSelected ? 'ring-4 ring-yellow-500 scale-[1.02] z-10 border-yellow-500' : ''}`}>
+                  <div className="relative aspect-[4/3] w-full cursor-pointer hover:opacity-90 transition-opacity" onClick={() => handleImageClick(card)}>
+                    <img src={getCardImage(card)} alt={card.title} className="w-full h-full object-cover" onError={(e) => { e.target.src = `https://placehold.co/400x300/333/FFF?text=${card.title}`; }} />
+                    {card.id !== 'intro' && <div className="absolute top-0 right-0 bg-black/70 px-3 py-1 rounded-bl-lg"><span className="text-white font-black text-xl">{card.id}</span></div>}
+                  </div>
+                  <div className="p-3 flex-grow flex flex-col bg-slate-900">
+                    <h3 className="font-bold text-xs uppercase tracking-wider text-slate-300 mb-1">{card.title}</h3>
+                    <p className="text-[10px] text-slate-500 leading-tight line-clamp-3">{card.desc}</p>
+                  </div>
+                  <div className="grid grid-cols-2 border-t border-slate-700 divide-x divide-slate-700 bg-slate-800">
+                    <button onClick={(e) => { e.stopPropagation(); setCardHint(card); }} className="flex items-center justify-center gap-1 py-3 hover:bg-yellow-900/30 text-yellow-500 transition-colors">
+                      <Lightbulb size={18} />
+                    </button>
+                    {getCardIcon(card) ? (
+                      <button onClick={(e) => { e.stopPropagation(); handleCardClick(card); }} className={`flex items-center justify-center gap-1 py-3 transition-colors ${isSelected || activeMachine?.id === card.id ? 'bg-yellow-600 text-black' : 'hover:bg-slate-700 text-slate-300'}`}>
+                        {getCardIcon(card)}
+                      </button>
+                    ) : <div className="bg-slate-900/50"></div>}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* INDICE CARTE MODAL */}
+      {cardHint && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setCardHint(null)}>
+          <div className="bg-yellow-900/90 border-2 border-yellow-500 text-yellow-100 p-6 rounded-xl shadow-2xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-start mb-4">
+              <h3 className="font-bold text-yellow-400 uppercase tracking-widest flex items-center gap-2"><Lightbulb size={20} /> Indice Carte {cardHint.id}</h3>
+              <button onClick={() => setCardHint(null)}><X size={20}/></button>
+            </div>
+            <p className="text-lg leading-relaxed">{cardHint.hint || "Pas d'indice particulier."}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

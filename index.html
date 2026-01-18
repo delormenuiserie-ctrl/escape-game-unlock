@@ -11,34 +11,57 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        body { background-color: #020617; color: #cbd5e1; margin: 0; overflow-x: hidden; font-family: system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { 
+            background-color: #020617; 
+            color: #cbd5e1; 
+            margin: 0; 
+            overflow-x: hidden; 
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* --- ANIMATIONS --- */
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         @keyframes successPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
         @keyframes archiveFly {
             0% { transform: translate(-50%, -50%) scale(1); opacity: 1; top: 50%; left: 50%; border-radius: 20px; }
             100% { transform: translate(-50%, -50%) scale(0.05); opacity: 0; top: var(--ty); left: var(--tx); border-radius: 50%; }
         }
-        @keyframes iconRotate {
-            0% { transform: rotate(0) scale(1); opacity: 1; }
-            50% { transform: rotate(180deg) scale(0); opacity: 0; }
-            100% { transform: rotate(360deg) scale(1); opacity: 1; }
+
+        /* Animation des ondes radio */
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 0.4; }
+            100% { transform: scale(4); opacity: 0; }
         }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes orbPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+            50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); }
+        }
+
+        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
         .animate-shake-error { animation: shake 0.4s ease-in-out; border-color: #ef4444 !important; background: rgba(127, 29, 29, 0.4) !important; }
         .animate-success-flash { animation: successPulse 0.4s ease-out; border-color: #10b981 !important; background: rgba(6, 78, 59, 0.4) !important; }
-        .animate-icon-transform { animation: iconRotate 0.6s ease-in-out; }
-        .card-fly-overlay { position: fixed; z-index: 1000; pointer-events: none; width: 200px; aspect-ratio: 2/3; animation: archiveFly 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        .card-fly-overlay { 
+            position: fixed; z-index: 1000; pointer-events: none; 
+            width: 200px; aspect-ratio: 2/3; 
+            animation: archiveFly 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
         .card-ratio { aspect-ratio: 2 / 3; }
         .selected-card { border-color: #eab308 !important; box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); transform: scale(1.02); z-index: 20; }
-        .floating-btn { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .floating-btn { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1.5px solid rgba(255, 255, 255, 0.2); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .radio-pulse {
-            position: fixed; top: 1rem; left: 1rem; width: 8px; height: 8px; background: #ef4444; border-radius: 50%;
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); animation: radioPulse 1.5s infinite; z-index: 100;
-        }
-        @keyframes radioPulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        /* Éléments de l'effet d'ondes */
+        .ripple-container { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
+        .ripple-circle { position: absolute; border: 2px solid #ef4444; border-radius: 50%; animation: ripple 3s infinite ease-out; width: 100%; height: 100%; }
+        .ripple-circle:nth-child(2) { animation-delay: 1s; }
+        .ripple-circle:nth-child(3) { animation-delay: 2s; }
+        .main-orb { width: 24px; height: 24px; background: #ef4444; border-radius: 50%; z-index: 10; animation: orbPulse 2s infinite; }
     </style>
 </head>
 <body>
@@ -47,322 +70,216 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        /* --- CONFIGURATION & DONNÉES GLOBALES --- */
-        const apiKey = ""; // La clé est injectée automatiquement à l'exécution
-        const NARRATION_INTERVAL = 50000; 
+        /* --- CONFIGURATION --- */
+        const GITHUB_AUDIO_PATH = "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/audio/";
 
         const GAME_DATA = {
             cards: {
                 'intro': { id: 'intro', type: 'grey', title: "Mission", desc: "Don Bailat vous charge de dérober le Talisman de Kronos à Don Robinio.", reveals: [5], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20intro%20Don%20bailat.png" },
-                5: { id: 5, type: 'grey', title: "Avenue Sombre", desc: "Agent, soyez extrêmement attentif. Nous recherchons où est cachée notre sacoche d'équipement.", hint: "Cherchez une lettre 'F' camouflée.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png" },
+                5: { id: 5, type: 'grey', title: "Avenue Sombre", desc: "Agent, soyez attentif. Nous devons localiser la sacoche d'équipement.", hint: "La lettre F est cachée dans le décor.", reveals: [], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/5eme%20avenu%20carte%205.png" },
                 'F': { id: 'F', type: 'grey', title: "Sacoche", desc: "Matériel récupéré.", reveals: [8, 37, 42], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20F%20sacoche.png" },
-                44: { id: 44, type: 'blue', title: "Fenêtre Haute", desc: "Intrusion à l'étage.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/44%20carte%20appartement.png" },
-                86: { id: 86, type: 'grey', title: "Le Bureau", desc: "Le sanctuaire de Robinio.", reveals: [11, 25, 58, 'W'], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2086%20reptembre%20test.png" },
-                8: { id: 8, type: 'red', title: "Pied-de-biche", desc: "Outil en acier.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%208%20pied%20de%20biche.png" },
+                44: { id: 44, type: 'blue', title: "Fenêtre Haute", desc: "Une fenêtre restée entrouverte à l'étage.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/44%20carte%20appartement.png" },
+                86: { id: 86, type: 'grey', title: "Le Bureau", desc: "Le sanctuaire secret de Robinio.", reveals: [11, 25, 58, 'W'], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2086%20reptembre%20test.png" },
+                8: { id: 8, type: 'red', title: "Pied-de-biche", desc: "Pour forcer les caisses.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%208%20pied%20de%20biche.png" },
                 15: { id: 15, type: 'red', title: "Épingle", desc: "Fine et résistante.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2015%20epingle.png" },
-                42: { id: 42, type: 'red', title: "Grappin", desc: "Escalade.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2042%20grappin.png" },
-                37: { id: 37, type: 'red', title: "Manette", desc: "Levier électrique.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2037%20la%20manette.png" },
-                11: { id: 11, type: 'grey', title: "Tapis Ancien", desc: "Motif animalier.", hint: "Aigle (95) vs Serpent (89).", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2011%20tapis.png" },
-                58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2058.png" },
-                25: { id: 25, type: 'grey', title: "Portrait", desc: "Peinture de Don Robinio.", hint: "Code 43 sur W.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2025%20don%20robinio.png" },
+                42: { id: 42, type: 'red', title: "Grappin", desc: "Indispensable pour grimper.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2042%20grappin.png" },
+                37: { id: 37, type: 'red', title: "Manette", desc: "Levier de commande électrique.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2037%20la%20manette.png" },
+                11: { id: 11, type: 'grey', title: "Tapis Ancien", desc: "Motif animalier : Aigle et Serpent.", hint: "Aigle (95) vs Serpent (89).", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2011%20tapis.png" },
+                58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée par un mécanisme fin.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2058.png" },
+                25: { id: 25, type: 'grey', title: "Portrait", desc: "Don Robinio vous observe.", hint: "Code 43 sur la Machine W.", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2025%20don%20robinio.png" },
                 'W': { id: 'W', type: 'green', title: "Machine W", desc: "Sécurité alarme.", hint: "Fils(6) + Manette(37).", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%20w%20141.png" },
-                'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode.", fallbackImg: "https://placehold.co/300/450/065f46/FFFFFF?text=Coffre+Blindé+R" },
+                'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode à 4 chiffres.", fallbackImg: "https://placehold.co/300/450/065f46/FFFFFF?text=Coffre+R" },
                 22: { id: 22, type: 'blue', title: "Caisse", desc: "Contient le Talisman !", fallbackImg: "https://placehold.co/300/450/1e40af/FFFFFF?text=Caisse+22" },
-                73: { id: 73, type: 'grey', title: "Note Index", desc: "Page 73.", fallbackImg: "https://placehold.co/300/450/475569/FFFFFF?text=Indice+73" },
-                43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "Alarme coupée.", reveals: ['T', 15], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2043.png" },
-                'T': { id: 'T', type: 'gold', title: "Talisman", desc: "L'artefact temporel !", fallbackImg: "https://placehold.co/300/450/f59e0b/FFFFFF?text=TALISMAN" },
+                73: { id: 73, type: 'grey', title: "Note Index", desc: "Déchiffrage final.", fallbackImg: "https://placehold.co/300/450/475569/FFFFFF?text=Indice+73" },
+                43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "Alarme coupée, cachette révélée.", reveals: ['T', 15], fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2043.png" },
+                'T': { id: 'T', type: 'gold', title: "Talisman", desc: "L'artefact de Kronos.", fallbackImg: "https://placehold.co/300/450/f59e0b/FFFFFF?text=TALISMAN" },
                 30: { id: 30, type: 'gold', title: "Victoire", desc: "Mission réussie !", fallbackImg: "https://placehold.co/300/450/854d0e/FFFFFF?text=VICTOIRE" }
             },
             combinations: { "15+58": 73, "37+W": 43, "8+22": 30, "42+44": 86 },
             codes: { 'W': "43", 'R': "9589" }
         };
 
-        const AUTO_DISCARD = { 
-            5: ['intro'], 86: [5, 44, 42, 'F'], 73: [15, 58], 
-            43: [37, 'W', 25], 'R': [86], 30: [8, 22] 
-        };
+        const AUTO_DISCARD = { 5: ['intro'], 86: [5, 44, 42, 'F'], 73: [15, 58], 43: [37, 'W', 25], 30: [8, 22] };
         const ALL_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 37, 42, 58, 73, 86, 'W', 'F', 'R', 'T'];
 
-        /* --- MOTEUR AUDIO (Synthèse Vinyle Réaliste & Mélodie) --- */
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const masterGain = audioCtx.createGain();
-        masterGain.connect(audioCtx.destination);
-        
-        const startAmbience = () => {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
-            // 1. Grondement de basse (moteur du tourne-disque)
-            const oscBase = audioCtx.createOscillator();
-            const gainBase = audioCtx.createGain();
-            oscBase.type = 'sine'; oscBase.frequency.setValueAtTime(45, audioCtx.currentTime);
-            gainBase.gain.setValueAtTime(0, audioCtx.currentTime);
-            gainBase.gain.linearRampToValueAtTime(0.04, audioCtx.currentTime + 3);
-            oscBase.connect(gainBase); gainBase.connect(masterGain);
-            oscBase.start();
-
-            // 2. Mélodie Noir (Piano lointain)
-            const notes = [110.00, 130.81, 164.81]; 
-            const playNote = () => {
-                const now = audioCtx.currentTime;
-                const freq = notes[Math.floor(Math.random() * notes.length)];
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine'; osc.frequency.setValueAtTime(freq, now);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.035, now + 1.5); 
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 12);
-                osc.connect(gain); gain.connect(masterGain);
-                osc.start(now); osc.stop(now + 12);
-                setTimeout(playNote, 9000 + Math.random() * 10000);
-            };
-            playNote();
-
-            // 3. GRÉSILLEMENT VINYLE (Poussière aléatoire rare)
-            const playDustCrackle = () => {
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                const filter = audioCtx.createBiquadFilter();
-
-                osc.type = 'square'; 
-                osc.frequency.setValueAtTime(4000 + Math.random() * 4000, now);
-                
-                filter.type = 'highpass';
-                filter.frequency.setValueAtTime(2500, now);
-
-                gain.gain.setValueAtTime(Math.random() * 0.007 + 0.001, now);
-                gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.004);
-
-                osc.connect(filter); filter.connect(gain); gain.connect(masterGain);
-                osc.start(now); osc.stop(now + 0.004);
-                
-                setTimeout(playDustCrackle, Math.random() * 3000 + 400);
-            };
-            playDustCrackle();
-
-            // 4. Bruit de surface doux
-            const noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
-            const data = noiseBuffer.getChannelData(0);
-            for (let i = 0; i < noiseBuffer.length; i++) data[i] = Math.random() * 2 - 1;
-            const noise = audioCtx.createBufferSource();
-            noise.buffer = noiseBuffer; noise.loop = true;
-            const lp = audioCtx.createBiquadFilter();
-            lp.type = 'lowpass'; lp.frequency.setValueAtTime(120, audioCtx.currentTime);
-            const noiseGain = audioCtx.createGain();
-            noiseGain.gain.setValueAtTime(0.02, audioCtx.currentTime);
-            noise.connect(lp); lp.connect(noiseGain); noiseGain.connect(masterGain);
-            noise.start();
-        };
-
-        const playGameSound = (type) => {
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const now = audioCtx.currentTime;
-            
-            if (type === 'card_archive') {
-                const bufferSize = audioCtx.sampleRate * 0.4;
-                const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-                const noiseData = noiseBuffer.getChannelData(0);
-                for (let i = 0; i < bufferSize; i++) noiseData[i] = Math.random() * 2 - 1;
-                const noiseSource = audioCtx.createBufferSource();
-                noiseSource.buffer = noiseBuffer;
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.setValueAtTime(1000, now);
-                filter.frequency.exponentialRampToValueAtTime(400, now + 0.4);
-                const gain = audioCtx.createGain();
-                gain.gain.setValueAtTime(0.08, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.4);
-                noiseSource.connect(filter); filter.connect(gain); gain.connect(masterGain);
-                noiseSource.start();
-            } else if (type === 'card_open') {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(masterGain);
-                osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
-                gain.gain.setValueAtTime(0.02, now); gain.gain.linearRampToValueAtTime(0, now + 0.04);
-                osc.start(); osc.stop(now + 0.04);
-            } else if (type === 'combine_success') {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(masterGain);
-                osc.type = 'sine'; osc.frequency.setValueAtTime(150, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 1);
-                osc.start(); osc.stop(now + 1);
-            } else if (type === 'action_error') {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(masterGain);
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(40, now);
-                gain.gain.setValueAtTime(0.12, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
-                osc.start(); osc.stop(now + 0.4);
-            }
-        };
-
-        /* --- FONCTIONS GEMINI --- */
-        async function fetchGemini(url, payload) {
-            let delay = 1000;
-            for (let i = 0; i < 5; i++) {
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    return result;
-                } catch (e) {
-                    if (i === 4) throw e;
-                    await new Promise(r => setTimeout(r, delay));
-                    delay *= 2;
-                }
-            }
-        }
-
-        async function callGemini(prompt, systemInstruction) {
-            try {
-                const result = await fetchGemini(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                    contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: systemInstruction }] }
-                });
-                return result?.candidates?.[0]?.content?.parts?.[0]?.text;
-            } catch (e) { return null; }
-        }
-
-        async function speakText(text, isMuted) {
-            if (isMuted || !text) return;
-            try {
-                const result = await fetchGemini(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`, {
-                    contents: [{ parts: [{ text: "Dis ceci en français uniquement, avec une voix d'homme grave, calme et mystérieuse : " + text }] }],
-                    generationConfig: { 
-                        responseModalities: ["AUDIO"], 
-                        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } } } 
-                    },
-                    model: "gemini-2.5-flash-preview-tts"
-                });
-                const base64Audio = result?.candidates?.[0]?.content?.parts?.find(p => p.inlineData)?.inlineData?.data;
-                if (base64Audio) {
-                    const wavBase64 = await createWavHeader(base64Audio);
-                    const audio = new Audio("data:audio/wav;base64," + wavBase64);
-                    const source = audioCtx.createMediaElementSource(audio);
-                    source.connect(masterGain);
-                    audio.volume = 0.15; 
-                    audio.play();
-                }
-            } catch (e) { console.error("TTS Error", e); }
-        }
-
-        async function createWavHeader(base64Data) {
-            const raw = window.atob(base64Data);
-            const buffer = new ArrayBuffer(raw.length + 44);
-            const view = new DataView(buffer);
-            const sampleRate = 24000;
-            const channels = 1;
-            view.setUint32(0, 0x52494646, false); view.setUint32(4, 36 + raw.length, true); view.setUint32(8, 0x57415645, false); 
-            view.setUint32(12, 0x666d7420, false); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, channels, true);
-            view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * channels * 2, true); view.setUint16(32, channels * 2, true);
-            view.setUint16(34, 16, true); view.setUint32(36, 0x64617461, false); view.setUint32(40, raw.length, true);
-            for (let i = 0; i < raw.length; i++) view.setUint8(44 + i, raw.charCodeAt(i));
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
-            return btoa(binary);
-        }
-
-        /* --- ICONES --- */
-        const IconClock = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
-        const IconGrid = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>;
-        const IconX = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-        const IconLightbulb = () => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .5 2.2 1.5 3.1.7.7 1.3 1.5 1.5 2.4" /><path d="M9 18h6" /><path d="M10 22h4" />
-            </svg>
+        /* --- COMPOSANTS INTERNES --- */
+        const IconPuzzleMale = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" /><circle cx="16" cy="12" r="3.5" fill="#f87171" /></svg>
         );
-        const IconSearch = () => (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><line x1="21" cy1="21" x2="16.65" y2="16.65" />
-            </svg>
+        const IconPuzzleFemale = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24"><rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" /><circle cx="8" cy="12" r="3.5" fill="#020617" /></svg>
         );
-        const IconRadio = ({muted}) => (
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={muted ? "#64748b" : "#3b82f6"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>
-                {muted && <line x1="1" y1="1" x2="23" y2="23" stroke="#ef4444" strokeWidth="2" />}
-            </svg>
-        );
-        const IconSettings = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
-        const IconHand = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v5"/><path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v10"/><path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>;
-        const IconPuzzleMale = () => (<svg width="28" height="28" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" /><circle cx="16" cy="12" r="3.5" fill="#f87171" /></svg>);
-        const IconPuzzleFemale = () => (<svg width="28" height="28" viewBox="0 0 24 24"><rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" /><circle cx="8" cy="12" r="3.5" fill="#020617" /></svg>);
 
         function App() {
+            const [view, setView] = useState('home');
             const [hand, setHand] = useState([]);
             const [discardPile, setDiscardPile] = useState([]);
             const [foundIds, setFoundIds] = useState(new Set());
+            const [time, setTime] = useState(0);
+            const [penalty, setPenalty] = useState(0);
             const [selectedId, setSelectedId] = useState(null);
             const [inputValue, setInputValue] = useState("");
             const [zoomedCard, setZoomedCard] = useState(null);
             const [showZoomInfo, setShowZoomInfo] = useState(false);
             const [activeMachine, setActiveMachine] = useState(null);
             const [machineCode, setMachineCode] = useState("");
-            const [hintConfirm, setHintConfirm] = useState(null);
-            const [msg, setMsg] = useState({ t: "Agent, prêt ?", s: 'info' });
-            const [time, setTime] = useState(0);
-            const [penaltyMinutes, setPenaltyMinutes] = useState(0);
             const [showArchive, setShowArchive] = useState(false);
-            const [codeState, setCodeState] = useState(null);
-            const [isNarrationPlaying, setIsNarrationPlaying] = useState(false);
-            const [isRadioActive, setIsRadioActive] = useState(false); 
-            const [isMuted, setIsMuted] = useState(false);
-            
-            const gridBtnRef = useRef(null);
+            const [inspectCard, setInspectCard] = useState(null);
             const [animatingCards, setAnimatingCards] = useState([]);
-            const [pendingDiscards, setPendingDiscards] = useState([]);
-            const [transformingId, setTransformingId] = useState(null);
-            const handRef = useRef(hand);
-            const mutedRef = useRef(isMuted);
+            const [codeState, setCodeState] = useState(null);
+            const [isMuted, setIsMuted] = useState(false);
+            const [isInitialLoaded, setIsInitialLoaded] = useState(false);
 
-            useEffect(() => { handRef.current = hand; }, [hand]);
-            useEffect(() => { 
-                mutedRef.current = isMuted; 
-                masterGain.gain.setValueAtTime(isMuted ? 0 : 1, audioCtx.currentTime);
-            }, [isMuted]);
+            const audioCtxRef = useRef(null);
+            const masterGainRef = useRef(null);
+            const gridBtnRef = useRef(null);
+            const currentNarrativeRef = useRef(null);
 
+            /* --- PRECHARGEMENT HYBRIDE --- */
             useEffect(() => {
-                addCard('intro', true);
-                const timerInt = setInterval(() => setTime(prev => prev + 1), 1000);
-                return () => clearInterval(timerInt);
+                const priority = ['intro', 5, 'F'];
+                let loadedCount = 0;
+                priority.forEach(id => {
+                    const img = new Image();
+                    img.src = GAME_DATA.cards[id].fallbackImg;
+                    img.onload = () => {
+                        loadedCount++;
+                        if(loadedCount === priority.length) {
+                            setTimeout(() => setIsInitialLoaded(true), 2000);
+                        }
+                    };
+                });
+                Object.values(GAME_DATA.cards).forEach(c => {
+                    if(!priority.includes(c.id)) {
+                        const img = new Image();
+                        img.src = c.fallbackImg;
+                    }
+                });
             }, []);
 
             useEffect(() => {
-                if (!isRadioActive) return;
-                const narrInt = setInterval(async () => {
-                    if (handRef.current.length === 0 || mutedRef.current) return;
-                    const objNames = handRef.current.map(c => c.title).join(", ");
-                    const prompt = `Phrase de 3 mots maximum en français. Ton glacial. Agent possède : ${objNames}. NE CITE JAMAIS DE NUMÉROS. Danger immédiat.`;
-                    const system = "Tu es Charon. Phrases de 3 mots seulement en français. Pas de chiffres.";
-                    setIsNarrationPlaying(true);
-                    const narration = await callGemini(prompt, system);
-                    if (narration && !mutedRef.current) {
-                        setMsg({ t: narration, s: 'info' });
-                        await speakText(narration, false);
-                    }
-                    setTimeout(() => setIsNarrationPlaying(false), 8000);
-                }, NARRATION_INTERVAL);
-                return () => clearInterval(narrInt);
-            }, [isRadioActive]);
+                if (view === 'game') {
+                    addCard('intro', true);
+                    const timer = setInterval(() => setTime(prev => prev + 1), 1000);
+                    return () => clearInterval(timer);
+                }
+            }, [view]);
 
-            const executeArchiveFly = (card) => {
-                if (!gridBtnRef.current || !card) return;
-                const rect = gridBtnRef.current.getBoundingClientRect();
-                const animId = Math.random().toString(36);
-                setAnimatingCards(p => [...p, { ...card, animId, tx: rect.left + rect.width/2, ty: rect.top + rect.height/2 }]);
-                playGameSound('card_archive');
-                setTimeout(() => {
-                    setAnimatingCards(p => p.filter(c => c.animId !== animId));
-                    setDiscardPile(p => [...p, card]);
-                }, 800);
+            /* --- MOTEUR AUDIO (AMBANCE + PIANO) --- */
+            const initAudio = () => {
+                if (!audioCtxRef.current) {
+                    audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                    masterGainRef.current = audioCtxRef.current.createGain();
+                    masterGainRef.current.connect(audioCtxRef.current.destination);
+                    startAmbience();
+                }
+                if (audioCtxRef.current.state === 'suspended') audioCtxRef.current.resume();
             };
 
+            const startAmbience = () => {
+                const now = audioCtxRef.current.currentTime;
+                
+                // 1. Drone sourd permanent
+                const createDrone = (freq, vol) => {
+                    const osc = audioCtxRef.current.createOscillator();
+                    const g = audioCtxRef.current.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    g.gain.setValueAtTime(0, now);
+                    g.gain.linearRampToValueAtTime(vol, now + 4);
+                    osc.connect(g); g.connect(masterGainRef.current);
+                    osc.start();
+                };
+                createDrone(55, 0.04); createDrone(65.4, 0.03);
+
+                // 2. Piano Mélancolique (Volume amplifié à 0.12)
+                const minorScale = [110.00, 130.81, 146.83, 164.81, 174.61]; 
+                const playNoirPiano = () => {
+                    if (view !== 'game') return;
+                    const osc = audioCtxRef.current.createOscillator();
+                    const g = audioCtxRef.current.createGain();
+                    const note = minorScale[Math.floor(Math.random()*minorScale.length)];
+                    
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(note, audioCtxRef.current.currentTime);
+                    g.gain.setValueAtTime(0, audioCtxRef.current.currentTime);
+                    g.gain.linearRampToValueAtTime(0.12, audioCtxRef.current.currentTime + 1);
+                    g.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 10);
+                    
+                    osc.connect(g); g.connect(masterGainRef.current);
+                    osc.start(); osc.stop(audioCtxRef.current.currentTime + 10);
+                    
+                    setTimeout(playNoirPiano, 5000 + Math.random()*4000);
+                };
+                playNoirPiano();
+
+                // 3. Craquement Vinyle
+                const crackle = () => {
+                    const osc = audioCtxRef.current.createOscillator();
+                    const g = audioCtxRef.current.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(Math.random() * 5000 + 500, audioCtxRef.current.currentTime);
+                    g.gain.setValueAtTime(Math.random() * 0.007, audioCtxRef.current.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.0001, audioCtxRef.current.currentTime + 0.004);
+                    osc.connect(g); g.connect(masterGainRef.current);
+                    osc.start(); osc.stop(audioCtxRef.current.currentTime + 0.004);
+                    setTimeout(crackle, Math.random() * 2000 + 400);
+                };
+                crackle();
+            };
+
+            const playOrganicSound = (type) => {
+                if (isMuted || !audioCtxRef.current) return;
+                const now = audioCtxRef.current.currentTime;
+                const gain = audioCtxRef.current.createGain();
+                if (type === 'archive') {
+                    const noise = audioCtxRef.current.createBufferSource();
+                    const buffer = audioCtxRef.current.createBuffer(1, audioCtxRef.current.sampleRate * 0.4, audioCtxRef.current.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for(let i=0; i<buffer.length; i++) data[i] = Math.random() * 2 - 1;
+                    noise.buffer = buffer;
+                    const filter = audioCtxRef.current.createBiquadFilter();
+                    filter.type = 'lowpass'; filter.frequency.setValueAtTime(800, now);
+                    gain.gain.setValueAtTime(0.08, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                    noise.connect(filter); filter.connect(gain); gain.connect(masterGainRef.current);
+                    noise.start();
+                } else if (type === 'click') {
+                    const osc = audioCtxRef.current.createOscillator();
+                    osc.type = 'square'; osc.frequency.setValueAtTime(140, now);
+                    gain.gain.setValueAtTime(0.02, now); gain.gain.linearRampToValueAtTime(0, now + 0.05);
+                    osc.connect(gain); gain.connect(masterGainRef.current);
+                    osc.start(); osc.stop(now + 0.05);
+                } else if (type === 'success') {
+                    const osc = audioCtxRef.current.createOscillator();
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(200, now);
+                    gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                    osc.connect(gain); gain.connect(masterGainRef.current);
+                    osc.start(); osc.stop(now + 1.2);
+                } else if (type === 'error') {
+                    const osc = audioCtxRef.current.createOscillator();
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(50, now);
+                    gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.connect(gain); gain.connect(masterGainRef.current);
+                    osc.start(); osc.stop(now + 0.3);
+                }
+            };
+
+            const playNarrative = (id, type = 'desc') => {
+                if (isMuted) return;
+                
+                // Sécurité : Stopper l'audio précédent avant d'en lancer un nouveau
+                if (currentNarrativeRef.current) {
+                    currentNarrativeRef.current.pause();
+                    currentNarrativeRef.current.currentTime = 0;
+                }
+
+                const audio = new Audio(`${GITHUB_AUDIO_PATH}${type}_${id}.wav`);
+                audio.volume = 0.15; // Murmure
+                currentNarrativeRef.current = audio;
+                audio.play().catch(() => console.log(`Fichier ${type}_${id}.wav manquant.`));
+            };
+
+            /* --- LOGIQUE JEU --- */
             const addCard = (id, silent = false) => {
                 const card = GAME_DATA.cards[id];
                 if (!card || hand.some(c => String(c.id) === String(id)) || discardPile.some(c => String(c.id) === String(id))) return;
@@ -374,38 +291,31 @@
                     currentHand = currentHand.filter(c => !AUTO_DISCARD[id].some(did => String(did) === String(c.id)));
                 }
                 setHand(currentHand);
-                if(!silent) playGameSound('card_open');
-                if (toArchive.length > 0) zoomedCard ? setPendingDiscards(p => [...p, ...toArchive]) : toArchive.forEach((c, i) => setTimeout(() => executeArchiveFly(c), i * 200));
+                if(!silent) { playOrganicSound('click'); playNarrative(id, 'reveal'); }
+                if (toArchive.length > 0) toArchive.forEach((c, i) => setTimeout(() => executeArchiveFly(c), i * 200));
             };
 
-            const solveMachine = (m, code) => {
-                if (code === GAME_DATA.codes[m.id]) {
-                    playGameSound('combine_success');
-                    if (m.id === 'W') {
-                        setTransformingId('W');
-                        setTimeout(() => {
-                            setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Sécurité OFF" } : c));
-                            setTransformingId(null); setActiveMachine(null); addCard(43);
-                        }, 600);
-                    } else {
-                        const mc = hand.find(c => String(c.id) === String(m.id));
-                        setHand(p => p.filter(c => String(c.id) !== String(m.id)));
-                        if (mc) executeArchiveFly(mc);
-                        if (m.id === 'R') addCard(22);
-                        setActiveMachine(null);
-                    }
-                } else { playGameSound('action_error'); setPenaltyMinutes(p => p + 3); }
-                setMachineCode("");
+            const executeArchiveFly = (card) => {
+                if (!gridBtnRef.current) return;
+                const rect = gridBtnRef.current.getBoundingClientRect();
+                const animId = Math.random().toString(36);
+                setAnimatingCards(p => [...p, { ...card, animId, tx: rect.left + rect.width/2, ty: rect.top + rect.height/2 }]);
+                playOrganicSound('archive');
+                setTimeout(() => {
+                    setAnimatingCards(p => p.filter(c => c.animId !== animId));
+                    setDiscardPile(p => [...p, card]);
+                }, 850);
             };
 
             const handleCodeSubmit = (e) => {
                 e.preventDefault();
                 const v = inputValue.toUpperCase();
                 let tid = GAME_DATA.cards[v] ? v : (v === 'F' ? 'F' : (v === 'R' ? 'R' : null));
-                if (tid && !hand.some(c => String(c.id) === String(tid)) && !discardPile.some(c => String(c.id) === String(tid))) {
-                    setCodeState('success'); setTimeout(() => { setCodeState(null); addCard(tid); }, 600);
+                if (tid && !foundIds.has(tid)) {
+                    addCard(tid);
+                    setCodeState('success'); setTimeout(()=>setCodeState(null), 600);
                 } else {
-                    playGameSound('action_error'); setCodeState('error'); setPenaltyMinutes(p => p + 2); setTimeout(() => setCodeState(null), 600);
+                    playOrganicSound('error'); setPenalty(p => p + 2); setCodeState('error'); setTimeout(()=>setCodeState(null), 600);
                 }
                 setInputValue("");
             };
@@ -414,117 +324,143 @@
                 const key = [id1, id2].sort((a,b) => String(a).localeCompare(String(b))).join('+');
                 const res = GAME_DATA.combinations[key];
                 if (res) {
-                    playGameSound('combine_success');
-                    const c1 = hand.find(c => String(c.id) === String(id1)), c2 = hand.find(c => String(c.id) === String(id2));
+                    playOrganicSound('success');
+                    const c1 = hand.find(c => String(c.id) === String(id1));
+                    const c2 = hand.find(c => String(c.id) === String(id2));
                     setHand(p => p.filter(c => String(c.id) !== String(id1) && String(c.id) !== String(id2)));
                     if (c1) executeArchiveFly(c1); if (c2) setTimeout(() => executeArchiveFly(c2), 200);
                     addCard(res);
-                } else { playSound('error'); setPenaltyMinutes(p => p + 1); }
+                } else { playOrganicSound('error'); setPenalty(p => p + 1); }
                 setSelectedId(null);
             };
 
-            const formatTime = (s = time) => {
-                const m = Math.floor(s / 60).toString().padStart(2, '0');
-                const sec = (s % 60).toString().padStart(2, '0');
-                return `${m}:${sec}`;
+            const solveMachine = (m, code) => {
+                if (code === GAME_DATA.codes[m.id]) {
+                    playOrganicSound('success');
+                    if (m.id === 'W') {
+                        setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Sécurité OFF" } : c));
+                        setActiveMachine(null); addCard(43);
+                    } else {
+                        const mc = hand.find(c => String(c.id) === String(m.id));
+                        setHand(p => p.filter(c => String(c.id) !== String(m.id)));
+                        if (mc) executeArchiveFly(mc);
+                        if (m.id === 'R') addCard(22);
+                        setActiveMachine(null);
+                    }
+                } else { playOrganicSound('error'); setPenalty(p => p + 3); }
+                setMachineCode("");
             };
+
+            if (view === 'home') return (
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] p-8 text-center animate-fade-in">
+                    <div className="ripple-container mb-12">
+                        <div className="ripple-circle"></div>
+                        <div className="ripple-circle"></div>
+                        <div className="ripple-circle"></div>
+                        <div className="main-orb"></div>
+                    </div>
+                    
+                    <h1 className="text-3xl font-black text-white uppercase tracking-[0.4em] mb-4">Liaison Orus</h1>
+                    
+                    {!isInitialLoaded ? (
+                        <div className="space-y-4 py-8">
+                            <p className="text-[10px] text-red-500 font-black uppercase animate-pulse">Synchronisation du signal...</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-8 animate-fade-in">
+                            <div className="max-w-xs mx-auto space-y-4">
+                                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest text-blue-400">Protocole de Connexion</p>
+                                <div className="text-[11px] text-slate-400 leading-relaxed bg-black/40 p-5 rounded-2xl border border-slate-800 text-left border-l-4 border-l-red-600 shadow-2xl">
+                                    "Agent, le canal est sécurisé. Votre infiltration sur la 5ème Avenue commence maintenant. Ne faites aucune erreur, le Don n'aime pas attendre."
+                                </div>
+                            </div>
+                            <button onClick={() => { initAudio(); setView('game'); }} className="py-6 px-14 bg-red-700 hover:bg-red-600 text-white font-black rounded-full uppercase tracking-widest active:scale-95 shadow-[0_0_30px_rgba(185,28,28,0.4)] transition-all">Se Connecter</button>
+                        </div>
+                    )}
+                </div>
+            );
 
             return (
                 <div className="flex flex-col items-center min-h-screen w-full bg-[#020617] text-slate-300 overflow-hidden font-sans">
-                    {!isRadioActive && (
-                        <div className="fixed inset-0 z-[1000] bg-[#020617] flex flex-col items-center justify-center p-8 text-center animate-fade-in">
-                            <div className="w-24 h-24 bg-slate-900 border-2 border-slate-800 rounded-full flex items-center justify-center mb-10 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                                <div className="w-3 h-3 bg-red-600 rounded-full animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.8)]"></div>
-                            </div>
-                            <h1 className="text-2xl font-black text-white uppercase tracking-[0.3em] mb-4">Canal Privé</h1>
-                            <p className="text-slate-500 mb-12 max-w-xs leading-relaxed italic text-sm">"On vous écoute, Agent. Ne me décevez pas."</p>
-                            <button onClick={() => { setIsRadioActive(true); startAmbience(); }} className="px-14 py-6 bg-slate-800 border border-slate-600 text-white font-black rounded-2xl uppercase tracking-[0.2em] active:scale-95 transition-all shadow-2xl">Ouvrir la ligne</button>
-                        </div>
-                    )}
-
-                    {isNarrationPlaying && <div className="radio-pulse"></div>}
-                    
                     {animatingCards.map(c => (
                         <div key={c.animId} className="card-fly-overlay overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900" style={{'--tx': `${c.tx}px`, '--ty': `${c.ty}px`}}>
                             <img src={c.fallbackImg} className="w-full h-full object-cover" />
                         </div>
                     ))}
 
-                    <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700 flex items-center gap-2 sticky top-2 z-50 mb-6 shadow-xl mx-2">
-                        <div className="flex flex-col items-center bg-black/40 px-3 py-1.5 rounded-xl border border-slate-800 shrink-0 min-w-[75px]">
-                            <div className="flex items-center gap-1.5"><IconClock /> <span className="font-mono font-bold text-white text-base">{formatTime()}</span></div>
-                            {penaltyMinutes > 0 && <span className="text-[9px] text-red-500 font-black tracking-tighter">PÉN: {penaltyMinutes}m</span>}
+                    {/* Header */}
+                    <div className="w-full max-w-lg bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700 flex items-center gap-2 sticky top-2 z-50 mb-6 mx-2 shadow-2xl">
+                        <div className="flex flex-col items-center bg-black/40 px-3 py-1.5 rounded-xl border border-slate-800 min-w-[80px]">
+                            <div className="font-mono font-bold text-white text-sm">{Math.floor(time/60)}:{(time%60).toString().padStart(2,'0')}</div>
+                            {penalty > 0 && <span className="text-[9px] text-red-500 font-black">+{penalty}m</span>}
                         </div>
-                        <form onSubmit={handleCodeSubmit} className={`flex-grow flex items-center bg-black/50 border border-slate-700 rounded-xl px-2 py-1 transition-all ${codeState === 'error' ? 'animate-shake-error' : codeState === 'success' ? 'animate-success-flash' : ''}`}>
-                            <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="CODE" className="w-full bg-transparent text-white font-black text-center text-sm outline-none placeholder:text-slate-600 uppercase tracking-widest" />
-                            <button className="ml-1 p-2 bg-blue-700 rounded-lg text-[10px] font-black uppercase text-white active:scale-90">OK</button>
+                        <form onSubmit={handleCodeSubmit} className={`flex-grow flex items-center bg-black/50 border border-slate-700 rounded-xl px-2 transition-all ${codeState === 'error' ? 'animate-shake-error' : codeState === 'success' ? 'animate-success-flash' : ''}`}>
+                            <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="CODE" className="w-full bg-transparent p-2 text-white font-black text-center text-sm outline-none uppercase tracking-widest" />
+                            <button className="p-2 text-blue-500 font-black">OK</button>
                         </form>
-                        <button onClick={() => setIsMuted(!isMuted)} className="p-2.5 bg-slate-800 rounded-xl border border-slate-700 active:scale-95">
-                            <IconRadio muted={isMuted} />
+                        <button ref={gridBtnRef} onClick={() => setShowArchive(true)} className="p-2.5 bg-slate-800 rounded-xl active:scale-95 text-slate-400">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                         </button>
-                        <button onClick={() => { setShowArchive(true); }} className="p-2.5 bg-slate-800 rounded-xl border border-slate-700 active:scale-95 text-slate-400"><IconGrid/></button>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-lg px-3 pb-32">
-                        {hand.map(c => {
-                            const isSpecial = c.type === 'red' || c.type === 'blue' || String(c.id) === '44' || c.type === 'green';
-                            return (
-                                <div key={c.id} className={`group relative card-ratio bg-slate-900 border-2 rounded-[1.8rem] overflow-hidden shadow-lg transition-all ${selectedId === c.id ? 'selected-card' : 'border-slate-800'}`}>
-                                    <div className="w-full h-full cursor-pointer relative" onClick={() => { setZoomedCard(c); setShowZoomInfo(false); }}>
-                                        <img src={c.fallbackImg} className="w-full h-full object-cover" />
-                                        {c.id !== 'intro' && <div className="absolute top-0 right-0 bg-black/80 backdrop-blur-sm px-4 py-1.5 font-black text-white rounded-bl-2xl text-xs">{c.id}</div>}
-                                        <div className="absolute bottom-3 left-0 right-0 flex justify-between px-3 gap-2">
-                                            {c.hint && (
-                                                <button onClick={(e) => { e.stopPropagation(); setHintConfirm(c); }} className={`w-14 h-14 floating-btn rounded-full flex items-center justify-center shadow-xl active:scale-90 text-yellow-500`}><IconLightbulb /></button>
-                                            )}
-                                            {isSpecial && (
-                                                <button onClick={(e) => { e.stopPropagation(); if (c.type === 'green') setActiveMachine(c); else if (selectedId === null) setSelectedId(c.id); else if (selectedId === c.id) setSelectedId(null); else combine(selectedId, c.id); }} className={`w-14 h-14 floating-btn rounded-full flex items-center justify-center shadow-xl active:scale-90 ${selectedId === c.id ? 'bg-yellow-500 text-black border-yellow-400' : 'text-white'} ${transformingId === c.id ? 'animate-icon-transform' : ''}`}>
-                                                    {c.type === 'green' ? <IconSettings /> : c.type === 'red' ? <IconPuzzleMale /> : <IconPuzzleFemale />}
-                                                </button>
-                                            )}
-                                        </div>
+                    {/* Grille de jeu */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-lg px-3 pb-32 overflow-y-auto no-scrollbar">
+                        {hand.map(c => (
+                            <div key={c.id} className={`group relative card-ratio bg-slate-900 border-2 rounded-[1.8rem] overflow-hidden transition-all ${selectedId === c.id ? 'selected-card' : 'border-slate-800'}`}>
+                                <div className="w-full h-full cursor-pointer relative" onClick={() => { setZoomedCard(c); setShowZoomInfo(false); }}>
+                                    <img src={c.fallbackImg} className="w-full h-full object-cover" />
+                                    <div className="absolute top-0 right-0 bg-black/80 px-4 py-1.5 font-black text-white rounded-bl-2xl text-xs">{c.id}</div>
+                                    <div className="absolute bottom-3 left-0 right-0 flex justify-end px-3">
+                                        {(c.type === 'red' || c.type === 'blue' || c.type === 'green') && (
+                                            <button onClick={(e) => { e.stopPropagation(); if (c.type === 'green') setActiveMachine(c); else if (selectedId === null) setSelectedId(c.id); else if (selectedId === c.id) setSelectedId(null); else combine(selectedId, c.id); }} className={`w-12 h-12 bg-slate-900/80 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-xl active:scale-90 ${selectedId === c.id ? 'bg-yellow-500' : ''}`}>
+                                                {c.type === 'green' ? '⚙' : (c.type === 'red' ? <IconPuzzleMale /> : <IconPuzzleFemale />)}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        ))}
                     </div>
 
-                    <div className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-slate-700 py-4 px-6 text-center text-xs font-black uppercase tracking-widest text-blue-400 animate-fade-in">{msg.t}</div>
-
+                    {/* Zoom Immersif */}
                     {zoomedCard && (
                         <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center animate-fade-in" onClick={() => setShowZoomInfo(!showZoomInfo)}>
-                            <img src={zoomedCard.fallbackImg} className="max-h-[100vh] max-w-full object-contain shadow-2xl" />
-                            <button onClick={(e) => { e.stopPropagation(); setZoomedCard(null); }} className="absolute top-8 right-8 bg-black/60 p-5 rounded-full text-white z-[500] border border-white/20 active:scale-90 flex items-center justify-center shadow-2xl"><IconX/></button>
-                            <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/90 p-6 rounded-t-[3rem] transition-transform duration-300 ${showZoomInfo ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-                                <h2 className="text-2xl font-black mb-1 uppercase text-white border-b border-slate-800 pb-3">{zoomedCard.title}</h2>
-                                <p className="text-slate-400 text-base my-6 italic leading-relaxed">"{zoomedCard.desc}"</p>
+                            <img src={zoomedCard.fallbackImg} className="max-h-[100vh] max-w-full object-contain" />
+                            <button onClick={(e) => { e.stopPropagation(); setZoomedCard(null); }} className="absolute top-8 right-8 bg-black/60 p-5 rounded-full text-white border border-white/20 active:scale-90 shadow-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                            <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/90 p-8 rounded-t-[3rem] transition-transform duration-300 ${showZoomInfo ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+                                <h2 className="text-2xl font-black mb-4 uppercase text-white border-b border-slate-800 pb-4 tracking-tighter">{zoomedCard.title}</h2>
+                                <p className="text-slate-400 text-base mb-8 italic">"{zoomedCard.desc}"</p>
                                 <div className="flex flex-col gap-3">
+                                    {/* Correction : Le zoom reste actif quand on prend une carte révélée */}
                                     {zoomedCard.reveals?.filter(id => !foundIds.has(id)).map(id => (
-                                        <button key={id} onClick={() => { addCard(id); if (id === 5 || zoomedCard.reveals.filter(rid => !foundIds.has(rid)).length <= 1) setZoomedCard(null); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white shadow-xl flex items-center justify-center gap-3 uppercase text-sm"><IconHand /> Prendre carte {id}</button>
+                                        <button key={id} onClick={() => { addCard(id); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white uppercase text-sm tracking-widest shadow-xl">Prendre carte {id}</button>
                                     ))}
-                                    <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px]">Fermer les infos</button>
+                                    <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest">Refermer</button>
                                 </div>
                             </div>
-                            {!showZoomInfo && <button onClick={(e) => { e.stopPropagation(); setShowZoomInfo(true); speakText(zoomedCard.desc, mutedRef.current); }} className="absolute bottom-20 bg-slate-900/90 px-8 py-5 rounded-full border border-slate-700 text-xs font-black uppercase text-white flex items-center gap-3 active:scale-95 shadow-2xl"><IconSearch /> Analyser</button>}
+                            {!showZoomInfo && <button onClick={(e) => { e.stopPropagation(); setShowZoomInfo(true); playNarrative(zoomedCard.id, 'desc'); }} className="absolute bottom-20 bg-slate-900/90 px-8 py-5 rounded-full border border-slate-700 text-xs font-black uppercase text-white flex items-center gap-3 active:scale-95 shadow-2xl"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analyser</button>}
                         </div>
                     )}
 
+                    {/* Archives */}
                     {showArchive && (
                         <div className="fixed inset-0 z-[250] bg-slate-950 flex flex-col animate-fade-in">
                             <div className="bg-slate-900 p-6 flex justify-between items-center border-b border-slate-800">
-                                <h3 className="text-white font-black uppercase tracking-widest text-sm text-center w-full">Dossier Mission</h3>
-                                <button onClick={() => { setShowArchive(false); }} className="p-2 text-slate-400 hover:text-white absolute right-4"><IconX/></button>
+                                <h3 className="text-white font-black uppercase tracking-widest text-sm text-center w-full">Dossier de Mission</h3>
+                                <button onClick={() => setShowArchive(false)} className="p-2 text-slate-400 absolute right-4 active:scale-95"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                             </div>
                             <div className="flex-grow overflow-y-auto p-4 no-scrollbar">
                                 <div className="grid grid-cols-3 gap-3">
                                     {ALL_IDS.map(id => {
                                         const isFound = foundIds.has(id), card = GAME_DATA.cards[id];
                                         return (
-                                            <div key={id} onClick={() => isFound ? null : addCard(id)} className={`aspect-[2/3] rounded-xl border-2 flex items-center justify-center relative overflow-hidden transition-all active:scale-95 ${isFound ? 'border-blue-500/50 bg-slate-900 shadow-lg' : 'border-slate-800 bg-black/20 cursor-help'}`}>
+                                            <div key={id} onClick={() => isFound ? setInspectCard(card) : null} className={`aspect-[2/3] rounded-xl border-2 flex items-center justify-center relative overflow-hidden active:scale-95 ${isFound ? 'border-blue-500/50 bg-slate-900 shadow-lg' : 'border-slate-800 bg-black/20'}`}>
                                                 {isFound ? (
-                                                    <img src={card.fallbackImg} className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[50%]" />
+                                                    <>
+                                                        <img src={card.fallbackImg} className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[50%]" />
+                                                        <span className="font-black z-10 text-white text-base bg-black/40 px-2 rounded-lg">{id === 'intro' ? 'I' : id}</span>
+                                                    </>
                                                 ) : <span className="text-slate-800 font-black text-3xl">?</span>}
-                                                {isFound && <span className="font-black z-10 text-white text-base bg-black/40 px-2 rounded-lg">{id === 'intro' ? 'I' : id}</span>}
                                             </div>
                                         );
                                     })}
@@ -533,26 +469,28 @@
                         </div>
                     )}
 
-                    {hintConfirm && (
-                        <div className="fixed inset-0 z-[400] bg-black/85 backdrop-blur-md flex items-center justify-center p-6 animate-fade-in">
-                            <div className="bg-slate-900 border-2 border-yellow-600 p-8 rounded-[2.5rem] w-full max-w-xs text-center shadow-2xl">
-                                <div className="text-yellow-500 flex justify-center mb-4"><IconLightbulb /></div>
-                                <h3 className="text-xl font-black text-white mb-2 uppercase tracking-tighter">Aide Liaison</h3>
-                                <p className="text-slate-400 text-sm mb-8 leading-relaxed">Pénalité de <span className="text-red-500 font-bold text-lg">5m</span>.</p>
-                                <button onClick={() => { setPenaltyMinutes(p => p + 5); setMsg({t: hintConfirm.hint, s:'info'}); speakText(hintConfirm.hint, mutedRef.current); setHintConfirm(null); }} className="w-full py-4 bg-yellow-600 text-black font-black rounded-2xl uppercase tracking-widest text-xs mb-3 shadow-lg active:scale-95">Acheter l'indice</button>
-                                <button onClick={() => setHintConfirm(null)} className="w-full py-3 text-slate-500 font-bold text-xs uppercase">Retour</button>
+                    {inspectCard && (
+                        <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 animate-fade-in" onClick={() => setInspectCard(null)}>
+                            <div className="bg-slate-900 rounded-[2.5rem] w-full max-w-sm overflow-hidden border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
+                                <img src={inspectCard.fallbackImg} className="w-full aspect-[3/2] object-cover" />
+                                <div className="p-8">
+                                    <h2 className="text-2xl font-black text-white uppercase mb-4 tracking-tighter">{inspectCard.title}</h2>
+                                    <p className="text-slate-400 text-sm italic mb-8">"{inspectCard.desc}"</p>
+                                    <button onClick={() => setInspectCard(null)} className="w-full py-4 bg-slate-800 text-white font-black uppercase text-xs rounded-2xl active:scale-95">Refermer</button>
+                                </div>
                             </div>
                         </div>
                     )}
 
+                    {/* Machine Modal */}
                     {activeMachine && (
                         <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4">
                             <div className="bg-slate-900 border-2 border-emerald-500 p-8 rounded-[3rem] max-w-xs w-full shadow-2xl">
-                                <h3 className="text-emerald-400 font-black mb-6 uppercase text-center flex items-center justify-center gap-2"><IconSettings/> {activeMachine.title}</h3>
+                                <h3 className="text-emerald-400 font-black mb-6 uppercase text-center tracking-widest">{activeMachine.title}</h3>
                                 <input autoFocus value={machineCode} onChange={e => setMachineCode(e.target.value.replace(/\D/g,'').slice(0,4))} onKeyDown={e => e.key === 'Enter' && solveMachine(activeMachine, machineCode)} placeholder="----" className="w-full bg-black/60 border border-slate-800 rounded-2xl p-8 mb-10 text-center text-6xl font-mono text-emerald-500 outline-none tracking-[10px]" />
                                 <div className="grid grid-cols-2 gap-4">
-                                    <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-xs">Annuler</button>
-                                    <button onClick={() => solveMachine(activeMachine, machineCode)} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-xs">Valider</button>
+                                    <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-[10px]">Annuler</button>
+                                    <button onClick={() => solveMachine(activeMachine, machineCode)} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-[10px]">Valider</button>
                                 </div>
                             </div>
                         </div>

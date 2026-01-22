@@ -3,57 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Unlock! 5ème Avenue - Version Beta 3.10</title>
+    <title>Unlock! 5ème Avenue - Version Base 8.3</title>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        body { 
-            background-color: #020617; 
-            color: #cbd5e1; 
-            margin: 0; 
-            overflow-x: hidden; 
-            font-family: system-ui, -apple-system, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        window.FirebaseSDK = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, doc, setDoc, getDoc, onSnapshot };
+    </script>
 
-        /* --- ANIMATIONS --- */
+    <style>
+        body { background-color: #020617; color: #cbd5e1; margin: 0; overflow-x: hidden; font-family: system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-10px); } 40%, 80% { transform: translateX(10px); } }
         @keyframes successPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-        @keyframes signalFlash { 0%, 100% { opacity: 0.1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.3); background-color: #3b82f6; } }
-        @keyframes pulseHint { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.1); opacity: 0.7; } }
-        
         @keyframes archiveFly {
             0% { transform: translate(-50%, -50%) scale(1); opacity: 1; top: 50%; left: 50%; border-radius: 20px; }
             100% { transform: translate(-50%, -50%) scale(0.05); opacity: 0; top: var(--ty); left: var(--tx); border-radius: 50%; }
         }
-
-        .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         .animate-shake-error { animation: shake 0.4s ease-in-out; border-color: #ef4444 !important; background: rgba(127, 29, 29, 0.4) !important; }
         .animate-success-flash { animation: successPulse 0.4s ease-out; border-color: #10b981 !important; background: rgba(6, 78, 59, 0.4) !important; }
-        .animate-pulse-hint { animation: pulseHint 2s infinite ease-in-out; }
-        
-        .signal-led { width: 8px; height: 8px; border-radius: 50%; background-color: #1e293b; transition: all 0.1s; }
-        .signal-active { animation: signalFlash 0.4s ease-out; }
-
-        .card-fly-overlay { 
-            position: fixed; z-index: 1000; pointer-events: none; 
-            width: 200px; aspect-ratio: 2/3; 
-            animation: archiveFly 0.85s cubic-bezier(0.4, 0, 0.2, 1) forwards; 
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-        }
-
+        .card-fly-overlay { position: fixed; z-index: 1000; pointer-events: none; width: 180px; aspect-ratio: 2/3; animation: archiveFly 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
         .card-ratio { aspect-ratio: 2 / 3; }
         .selected-card { border-color: #eab308 !important; box-shadow: 0 0 25px rgba(234, 179, 8, 0.5); transform: scale(1.02); z-index: 20; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        .ripple-container { position: relative; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; }
-        .ripple-circle { position: absolute; border: 2px solid #ef4444; border-radius: 50%; animation: ripple 3s infinite ease-out; width: 100%; height: 100%; }
-        @keyframes ripple { 0% { transform: scale(1); opacity: 0.4; } 100% { transform: scale(4); opacity: 0; } }
+        .signal-led { width: 8px; height: 8px; border-radius: 50%; background-color: #1e293b; transition: all 0.1s; }
+        .signal-active { animation: signalFlash 0.4s ease-out; background-color: #3b82f6; }
+        @keyframes signalFlash { 0%, 100% { opacity: 0.1; transform: scale(1); } 50% { opacity: 0.8; transform: scale(1.3); } }
+        .zoom-btn { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); border: 1.5px solid rgba(255, 255, 255, 0.2); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .zoom-btn:active { transform: scale(0.85); background: rgba(255, 255, 255, 0.15); }
         .main-orb { width: 24px; height: 24px; background: #ef4444; border-radius: 50%; z-index: 10; animation: orbPulse 2s infinite; }
         @keyframes orbPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); } 50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(239, 68, 68, 0.8); } }
     </style>
@@ -62,69 +46,91 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo, useCallback, memo } = React;
 
-        const GITHUB_BASE = "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/";
-        const GITHUB_AUDIO_PATH = GITHUB_BASE + "audio/";
+        /* --- COMPOSANTS UI FIGÉS --- */
+        const SafeImage = memo(({ src, className, alt = "" }) => {
+            const [error, setError] = useState(false);
+            if (error || !src) return (
+                <div className={`${className} bg-slate-800 flex flex-col items-center justify-center text-slate-600 p-4 text-center border border-white/5`}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-2 opacity-20"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span className="text-[8px] font-black uppercase tracking-tighter opacity-40">Donnée Absente</span>
+                </div>
+            );
+            return <img src={src} className={className} alt={alt} onError={() => setError(true)} />;
+        });
 
-        const TIMED_VOICES = { 60: "time_1m", 300: "time_5m", 600: "time_10m", 1200: "time_20m" };
+        const IconPuzzleMale = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" /><circle cx="16" cy="12" r="3.5" fill="#f87171" /></svg>
+        );
+        const IconPuzzleFemale = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24"><rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" /><circle cx="8" cy="12" r="3.5" fill="#020617" /></svg>
+        );
+        const IconGear = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 home 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        );
+        const IconLightbulb = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
+        );
+        const IconSearch = () => (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="7" strokeWidth="2.5"/><path d="M15 15l6 6" strokeWidth="4"/><path d="M12 7a4.5 4.5 0 0 0-4 1" opacity="0.4" strokeWidth="1.5"/></svg>
+        );
+
+        /* --- CONFIGURATION & DONNÉES FIGÉES --- */
+        const GITHUB_RAW = "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/";
+        const GITHUB_AUDIO = GITHUB_RAW + "audio/";
 
         const GAME_DATA = {
             cards: {
-                'intro': { id: 'intro', type: 'grey', title: "Mission", desc: "Don Bailat vous charge de dérober le Talisman de Kronos à Don Robinio.", reveals: [5], fallbackImg: GITHUB_BASE + "carte%20intro%20Don%20bailat.png" },
-                5: { id: 5, type: 'grey', title: "Avenue Sombre", desc: "Agent, localisez la sacoche d'équipement camouflée.", hint: "La lettre F est cachée sur le décor.", reveals: [], fallbackImg: GITHUB_BASE + "5eme%20avenu%20carte%205.png" },
-                'F': { id: 'F', type: 'grey', title: "Sacoche", desc: "Matériel récupéré.", reveals: [8, 37, 42], fallbackImg: GITHUB_BASE + "carte%20F%20sacoche.png" },
-                44: { id: 44, type: 'blue', title: "Fenêtre Haute", desc: "Une fenêtre entrouverte à l'étage.", fallbackImg: GITHUB_BASE + "44%20carte%20appartement.png" },
-                86: { id: 86, type: 'grey', title: "Le Bureau", desc: "Le sanctuaire secret de Robinio.", reveals: [11, 25, 58, 'W'], fallbackImg: GITHUB_BASE + "carte%2086%20reptembre%20test.png" },
-                8: { id: 8, type: 'red', title: "Pied-de-biche", desc: "Acier trempé.", fallbackImg: GITHUB_BASE + "carte%208%20pied%20de%20biche.png" },
-                15: { id: 15, type: 'red', title: "Épingle", desc: "Outil de précision.", fallbackImg: GITHUB_BASE + "carte%2015%20epingle.png" },
-                42: { id: 42, type: 'red', title: "Grappin", desc: "Pour l'escalade.", fallbackImg: GITHUB_BASE + "carte%2042%20grappin.png" },
-                37: { id: 37, type: 'red', title: "Manette", desc: "Levier électrique.", fallbackImg: GITHUB_BASE + "carte%2037%20la%20manette.png" },
-                11: { id: 11, type: 'grey', title: "Tapis Ancien", desc: "Motif animalier.", hint: "L'Aigle (95) vs Serpent (89).", fallbackImg: GITHUB_BASE + "carte%2011%20tapis.png" },
-                58: { id: 58, type: 'blue', title: "Bibliothèque", desc: "Verrouillée par un mécanisme fin.", fallbackImg: GITHUB_BASE + "carte%2058.png" },
-                25: { id: 25, type: 'grey', title: "Portrait", desc: "Don Robinio.", hint: "Utilisez le code 43 sur la Machine W.", fallbackImg: GITHUB_BASE + "carte%2025%20don%20robinio.png" },
-                'W': { id: 'W', type: 'green', title: "Machine W", desc: "Sécurité alarme.", hint: "Vérifiez les fils.", fallbackImg: GITHUB_BASE + "carte%20w%20141.png" },
-                'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode à 4 chiffres.", fallbackImg: GITHUB_BASE + "carte%20r.png" },
-                22: { id: 22, type: 'blue', title: "Caisse", desc: "Contient le Talisman !", fallbackImg: "https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%2022.png" },
-                73: { id: 73, type: 'grey', title: "Note Index", desc: "Indice précieux.", hint: "selon le tapis un aigle plus trois serpent", fallbackImg: GITHUB_BASE + "carte%2073.png" },
-                43: { id: 43, type: 'grey', title: "Portrait Ouvert", desc: "Alarme coupée.", reveals: ['T', 15], fallbackImg: GITHUB_BASE + "carte%2043.png" },
-                'T': { id: 'T', type: 'gold', title: "Talisman", desc: "L'artefact de Kronos.", fallbackImg: GITHUB_BASE + "carte%20T.png" },
-                30: { id: 30, type: 'gold', title: "Victoire", desc: "Mission réussie !", fallbackImg: "https://placehold.co/300/450/854d0e/FFFFFF?text=VICTOIRE" }
+                'intro': { id: 'intro', type: 'grey', title: "Mission", desc: "Don Bailat vous charge d'infiltrer Don Robinio.", reveals: [5], fallbackImg: GITHUB_RAW + "carte%20intro%20Don%20bailat.png" },
+                "5": { id: "5", type: 'grey', title: "Avenue Sombre", desc: "Agent, cherchez la sacoche (F).", hint: "La lettre F est cachée.", reveals: [], fallbackImg: GITHUB_RAW + "5eme%20avenu%20carte%205.png" },
+                'F': { id: 'F', type: 'grey', title: "Sacoche", desc: "Matériel récupéré.", reveals: [8, 37, 42], fallbackImg: GITHUB_RAW + "carte%20F%20sacoche.png" },
+                "44": { id: "44", type: 'blue', title: "Fenêtre Haute", desc: "Entrée possible à l'étage.", fallbackImg: GITHUB_RAW + "44%20carte%20appartement.png" },
+                "86": { id: "86", type: 'grey', title: "Le Bureau", desc: "Le sanctuaire secret.", reveals: [11, 25, 58, 'W'], fallbackImg: GITHUB_RAW + "carte%2086%20reptembre%20test.png" },
+                "8": { id: "8", type: 'red', title: "Pied-de-biche", desc: "Acier trempé.", fallbackImg: GITHUB_RAW + "carte%208%20pied%20de%20biche.png" },
+                "15": { id: "15", type: 'red', title: "Épingle", desc: "Outil de crochetage.", fallbackImg: GITHUB_RAW + "carte%2015%20epingle.png" },
+                "42": { id: "42", type: 'red', title: "Grappin", desc: "Pour grimper.", fallbackImg: GITHUB_RAW + "carte%2042%20grappin.png" },
+                "37": { id: "37", type: 'red', title: "Manette", desc: "Levier électrique.", fallbackImg: GITHUB_RAW + "carte%2037%20la%20manette.png" },
+                "11": { id: "11", type: 'grey', title: "Tapis Ancien", desc: "Motif Aigle et Serpent.", hint: "Aigle(95) / Serpent(89).", fallbackImg: GITHUB_RAW + "carte%2011%20tapis.png" },
+                "58": { id: "58", type: 'blue', title: "Bibliothèque", desc: "Moteur bloqué.", fallbackImg: GITHUB_RAW + "carte%2058.png" },
+                "25": { id: "25", type: 'grey', title: "Portrait", desc: "Don Robinio vous fixe.", hint: "Code 43 sur Machine W.", fallbackImg: GITHUB_RAW + "carte%2025%20don%20robinio.png" },
+                'W': { id: 'W', type: 'green', title: "Machine W", desc: "Sécurité alarme.", hint: "Fils(6) + Manette(37).", fallbackImg: GITHUB_RAW + "carte%20w%20141.png" },
+                'R': { id: 'R', type: 'green', title: "Coffre-fort", desc: "Digicode blindé.", reveals: ["22"], fallbackImg: GITHUB_RAW + "carte%20r.png" },
+                "22": { id: "22", type: 'blue', title: "Caisse", desc: "Contient le butin bonus.", fallbackImg: GITHUB_RAW + "carte%2022.png" },
+                "73": { id: "73", type: 'grey', title: "Note Index", desc: "Indice précieux du bureau.", fallbackImg: GITHUB_RAW + "carte%2073.png" },
+                "43": { id: "43", type: 'grey', title: "Portrait Ouvert", desc: "L'alarme est coupée !", reveals: ['T', 15], fallbackImg: GITHUB_RAW + "carte%2043.png" },
+                'T': { id: 'T', type: 'gold', title: "Le Talisman", desc: "L'objectif de votre mission.", fallbackImg: GITHUB_RAW + "carte%20T.png" },
+                'P': { id: 'P', type: 'gold', title: "Le Palantir", desc: "Le bonus ultime de Kronos !", fallbackImg: GITHUB_RAW + "carte%20P.png" } 
             },
-            combinations: { "15+58": 73, "37+W": 43, "42+44": 86, "8+22": 30 },
+            combinations: { 
+                "15+58": "73", 
+                "37+W": "43", 
+                "42+44": "86", 
+                "8+22": "P" 
+            },
             codes: { 'W': "43", 'R': "53" }
         };
 
-        const AUTO_DISCARD = { 
-            5: ['intro'], 
-            73: [15, 58], 
-            30: [8, 22] 
+        const AUTO_DISCARD_RULES = { 
+            "86": ["44", "42", "F"], 
+            "43": ["25", "37", "W"], // Archivage du sabotage
+            "T": ["43"], // Archivage du passage une fois le talisman pris
+            "73": ["15", "58"], 
+            "P": ["8", "22"] // La carte T reste visible comme succès principal
         };
-
-        const ALL_IDS = ['intro', 5, 8, 11, 15, 22, 25, 30, 37, 42, 58, 73, 86, 'W', 'F', 'R', 'T'];
-
-        /* --- ICONS SVG --- */
-        const IconPuzzleMale = ({size=24}) => (
-          <svg width={size} height={size} viewBox="0 0 24 24"><rect x="4" y="4" width="12" height="16" rx="1" fill="#f87171" /><circle cx="16" cy="12" r="3.5" fill="#f87171" /></svg>
-        );
-        const IconPuzzleFemale = ({size=24}) => (
-          <svg width={size} height={size} viewBox="0 0 24 24"><rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" /><circle cx="8" cy="12" r="3.5" fill="#020617" /></svg>
-        );
-        const IconGear = ({size=24}) => (
-          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        );
-        const IconLightbulb = ({size=24}) => (
-          <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
-        );
+        const ALL_IDS = Object.keys(GAME_DATA.cards);
 
         function App() {
+            // ÉTATS GÉNÉRAUX
             const [view, setView] = useState('home');
             const [hand, setHand] = useState([]);
             const [discardPile, setDiscardPile] = useState([]);
             const [foundIds, setFoundIds] = useState(new Set());
-            const [purchasedHints, setPurchasedHints] = useState(new Set());
             const [time, setTime] = useState(0);
             const [penalty, setPenalty] = useState(0);
+            const [history, setHistory] = useState([{ time: "00:00", label: "Agent Orus prêt.", type: 'system' }]);
+            
+            // UI STATES
             const [selectedId, setSelectedId] = useState(null);
             const [inputValue, setInputValue] = useState("");
             const [zoomedCard, setZoomedCard] = useState(null);
@@ -138,288 +144,239 @@
             const [isMuted, setIsMuted] = useState(false);
             const [isInitialLoaded, setIsInitialLoaded] = useState(false);
             const [pianoSignal, setPianoSignal] = useState(false);
-            const [history, setHistory] = useState([{ time: "00:00", label: "Agent connecté au réseau Orus.", type: 'system' }]);
             const [menuTab, setMenuTab] = useState('gallery');
             const [hintMsg, setHintMsg] = useState(null);
-            const [specialPenalty, setSpecialPenalty] = useState(false);
+            
+            const [user, setUser] = useState(null);
+            const [db, setDb] = useState(null);
 
             const audioCtxRef = useRef(null);
             const masterGainRef = useRef(null);
-            const currentVoiceRef = useRef(null);
-            const ambienceStartedRef = useRef(false);
             const gridBtnRef = useRef(null);
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'unlock-5th-ave-v83-sanctuary';
 
+            const addToHistory = useCallback((label, type = 'action') => {
+                const timeStr = `${Math.floor(time/60).toString().padStart(2,'0')}:${(time%60).toString().padStart(2,'0')}`;
+                setHistory(prev => [{ time: timeStr, label, type }, ...prev]);
+            }, [time]);
+
+            /* --- FIREBASE (Optionnel) --- */
             useEffect(() => {
-                const priority = ['intro', 5, 'F'];
-                let loadedCount = 0;
-                priority.forEach(id => {
-                    const img = new Image();
-                    img.src = GAME_DATA.cards[id].fallbackImg;
-                    img.onload = () => { loadedCount++; if(loadedCount === priority.length) setTimeout(() => setIsInitialLoaded(true), 1500); };
-                });
+                const initFirebase = async () => {
+                    const { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore } = window.FirebaseSDK;
+                    if (typeof __firebase_config === "undefined") { setIsInitialLoaded(true); return; }
+                    try {
+                        const firebaseConfig = JSON.parse(__firebase_config);
+                        const app = initializeApp(firebaseConfig);
+                        const auth = getAuth(app);
+                        const firestore = getFirestore(app);
+                        setDb(firestore);
+                        await signInAnonymously(auth);
+                        onAuthStateChanged(auth, u => { if (u) setUser(u); });
+                    } catch (e) { }
+                    setIsInitialLoaded(true);
+                };
+                initFirebase();
             }, []);
 
-            /* --- RADIO & TEMPS --- */
+            /* --- MASTER MUTE EFFECT --- */
             useEffect(() => {
-                if (view === 'game') {
-                    const timerInt = setInterval(() => {
-                        setTime(prev => {
-                            const nt = prev + 1;
-                            if (TIMED_VOICES[nt]) playVoice(TIMED_VOICES[nt]);
-                            if (Math.random() < 0.01) playVoice("radio_glitch");
-                            return nt;
-                        });
-                    }, 1000);
-                    return () => clearInterval(timerInt);
-                }
-            }, [view]);
-
-            useEffect(() => {
-                if (view === 'game' && audioCtxRef.current && audioCtxRef.current.state === 'running' && !ambienceStartedRef.current) {
-                    ambienceStartedRef.current = true;
-                    startAmbience();
-                    addCard('intro', true);
-                }
-            }, [view]);
-
-            useEffect(() => {
-                if (masterGainRef.current && audioCtxRef.current) {
-                    const target = isMuted ? 0 : 0.6;
-                    masterGainRef.current.gain.setTargetAtTime(target, audioCtxRef.current.currentTime, 0.05);
+                if (masterGainRef.current) {
+                    masterGainRef.current.gain.setTargetAtTime(isMuted ? 0 : 0.6, 0, 0.1);
                 }
             }, [isMuted]);
 
-            /* --- AUDIO ENGINE --- */
-            const initAudio = async () => {
-                try {
-                    const AudioContext = window.AudioContext || window.webkitAudioContext;
-                    if (!audioCtxRef.current) {
-                        audioCtxRef.current = new AudioContext();
-                        masterGainRef.current = audioCtxRef.current.createGain();
-                        masterGainRef.current.gain.value = 0;
-                        masterGainRef.current.connect(audioCtxRef.current.destination);
-                    }
-                    if (audioCtxRef.current.state === 'suspended') await audioCtxRef.current.resume();
-                    const testOsc = audioCtxRef.current.createOscillator();
-                    testOsc.frequency.setValueAtTime(440, audioCtxRef.current.currentTime);
-                    testOsc.connect(masterGainRef.current);
-                    testOsc.start(); testOsc.stop(audioCtxRef.current.currentTime + 0.2);
-                    masterGainRef.current.gain.linearRampToValueAtTime(0.6, audioCtxRef.current.currentTime + 1);
-                    setView('game');
-                } catch (e) { console.error(e); }
-            };
-
             const startAmbience = () => {
-                const ctx = audioCtxRef.current, master = masterGainRef.current;
+                const ctx = audioCtxRef.current;
+                const master = masterGainRef.current;
+                if (!ctx || !master) return;
+                
                 const createDrone = (freq, vol) => {
                     const osc = ctx.createOscillator(), g = ctx.createGain();
                     osc.type = 'sine'; osc.frequency.setValueAtTime(freq, ctx.currentTime);
                     g.gain.setValueAtTime(0, ctx.currentTime); g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 4);
                     osc.connect(g); g.connect(master); osc.start();
                 };
-                createDrone(110, 0.04); 
+                createDrone(110, 0.05);
+
                 const playPiano = () => {
-                    if (view !== 'game' || isMuted) return;
+                    if (isMuted) return;
                     setPianoSignal(true); setTimeout(() => setPianoSignal(false), 500);
-                    const t = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain(), filter = ctx.createBiquadFilter();
+                    const t = ctx.currentTime, osc = ctx.createOscillator(), g = ctx.createGain();
                     osc.type = 'triangle'; osc.frequency.setValueAtTime(130.81, t);
-                    filter.type = 'lowpass'; filter.frequency.setValueAtTime(600, t);
-                    g.gain.setValueAtTime(0, t); 
-                    g.gain.linearRampToValueAtTime(0.08, t + 0.5); 
-                    g.gain.exponentialRampToValueAtTime(0.001, t + 5);
-                    osc.connect(filter); filter.connect(g); g.connect(master); osc.start(t); osc.stop(t + 5);
-                    setTimeout(playPiano, 4500 + Math.random()*5000);
+                    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.08, t + 1); g.gain.exponentialRampToValueAtTime(0.001, t + 6);
+                    osc.connect(g); g.connect(master); osc.start(t); osc.stop(t + 6);
+                    setTimeout(playPiano, 12000 + Math.random() * 8000);
                 };
                 playPiano();
             };
 
-            const playVoice = (filename) => {
-                if (isMuted) return;
-                if (currentVoiceRef.current) { currentVoiceRef.current.pause(); currentVoiceRef.current.currentTime = 0; }
-                const url = GITHUB_AUDIO_PATH + filename + ".wav";
-                const audio = new Audio(url);
-                audio.volume = 0.15;
-                currentVoiceRef.current = audio;
-                audio.play().catch(() => {});
-                if (filename !== "radio_glitch") addToHistory(`Transmission Radio : ${filename}`);
-            };
-
-            const addToHistory = (label, type = 'action') => {
-                const timeStr = `${Math.floor(time/60).toString().padStart(2,'0')}:${(time%60).toString().padStart(2,'0')}`;
-                setHistory(prev => [{ time: timeStr, label, type }, ...prev]);
-            };
-
-            /* --- ACTIONS --- */
-            const addCard = (id, silent = false) => {
-                const card = GAME_DATA.cards[id];
-                if (!card || hand.some(c => String(c.id) === String(id)) || discardPile.some(c => String(c.id) === String(id))) return;
-                
-                const newFoundIds = new Set(foundIds).add(id);
-                setFoundIds(newFoundIds);
-                
-                let currentHand = [...hand, card];
-                let toArchive = [];
-
-                if (AUTO_DISCARD[id]) {
-                    toArchive = currentHand.filter(c => AUTO_DISCARD[id].some(did => String(did) === String(c.id)));
-                    currentHand = currentHand.filter(c => !AUTO_DISCARD[id].some(did => String(did) === String(c.id)));
-                }
-
-                const core86Items = [11, 25, 58, 'W'];
-                const is86FullyExplored = core86Items.every(cid => newFoundIds.has(cid)) && newFoundIds.has('R');
-                
-                if (is86FullyExplored) {
-                    const card86 = currentHand.find(c => String(c.id) === '86');
-                    if (card86) { toArchive.push(card86); currentHand = currentHand.filter(c => String(c.id) !== '86'); }
-                }
-
-                if (newFoundIds.has('T') && newFoundIds.has(15)) {
-                    const card43 = currentHand.find(c => String(c.id) === '43');
-                    if (card43) { toArchive.push(card43); currentHand = currentHand.filter(c => String(c.id) !== '43'); }
-                }
-
-                setHand(currentHand);
-                addToHistory(`Carte ${id} révélée.`);
-                if(!silent) playVoice(`reveal_${id}`);
-                if (toArchive.length > 0) toArchive.forEach((c, i) => setTimeout(() => executeArchiveFly(c), i * 200));
-            };
-
-            const executeArchiveFly = (card) => {
-                if (!gridBtnRef.current) return;
+            /* --- MOTEUR DE FLUX FIGÉ --- */
+            const executeArchiveFly = useCallback((card) => {
+                if (!gridBtnRef.current || !card) return;
                 const rect = gridBtnRef.current.getBoundingClientRect();
                 const animId = Math.random().toString(36);
                 setAnimatingCards(p => [...p, { ...card, animId, tx: rect.left + rect.width/2, ty: rect.top + rect.height/2 }]);
-                setTimeout(() => { setAnimatingCards(p => p.filter(c => c.animId !== animId)); setDiscardPile(p => [...p, card]); }, 850);
-            };
+                setTimeout(() => { 
+                    setAnimatingCards(p => p.filter(c => c.animId !== animId)); 
+                    setDiscardPile(p => [...p, card]); 
+                }, 850);
+            }, []);
 
-            const handleCombine = (id1, id2) => {
-                const key = [String(id1), String(id2)].sort().join('+');
-                const res = GAME_DATA.combinations[key];
-                if (res) {
-                    addToHistory(`Succès de combinaison (${id1}+${id2}).`);
-                    const c1 = hand.find(c => String(c.id) === String(id1)), c2 = hand.find(c => String(c.id) === String(id2));
-                    setHand(p => p.filter(c => String(c.id) !== String(id1) && String(c.id) !== String(id2)));
-                    if (c1) executeArchiveFly(c1); if (c2) setTimeout(() => executeArchiveFly(c2), 200);
-                    addCard(res);
-                } else { addToHistory(`Erreur combinaison (${id1}+${id2}).`, 'error'); setPenalty(p => p + 1); }
-                setSelectedId(null);
-            };
+            const addCard = useCallback((id, silent = false) => {
+                const sid = String(id);
+                const card = GAME_DATA.cards[sid];
+                if (!card) return;
 
-            const handleAction = (card) => {
-                if (card.type === 'green') setActiveMachine(card);
-                else if (selectedId === null) setSelectedId(card.id);
-                else if (selectedId === card.id) setSelectedId(null);
-                else handleCombine(selectedId, card.id);
-            };
-
-            const handleHintClick = (card) => {
-                if (purchasedHints.has(card.id)) setHintMsg(card.hint);
-                else setHintMsg({ confirm: true, card: card });
-            };
-
-            const confirmHint = () => {
-                setPenalty(p => p + 5);
-                setPurchasedHints(p => new Set(p).add(hintMsg.card.id));
-                setHintMsg(hintMsg.card.hint);
-                addToHistory(`Indice consulté (${hintMsg.card.id}).`, 'error');
-            };
-
-            const solveMachine = (m, code) => {
-                const v = code.toUpperCase();
-                if (["6", "66", "666"].includes(v)) {
-                    setPenalty(p => p + 6); setSpecialPenalty(true);
-                    addToHistory(`Code maudit saisi sur machine ${m.id}.`, 'error');
-                    setMachineCode(""); return;
-                }
-                if (v === GAME_DATA.codes[m.id]) {
-                    addToHistory(`Machine ${m.id} résolue.`);
-                    if (m.id === 'W') { 
-                        setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Alarme coupée" } : c));
-                        setActiveMachine(null); addCard(43);
-                    } else {
-                        const mc = hand.find(c => String(c.id) === String(m.id));
-                        setHand(p => p.filter(c => String(c.id) !== String(m.id)));
-                        if (mc) executeArchiveFly(mc);
-                        if (m.id === 'R') addCard(22);
-                        setActiveMachine(null);
+                setHand(prevHand => {
+                    if (prevHand.some(c => String(c.id) === sid)) return prevHand;
+                    let nextHand = [...prevHand, card];
+                    let toArchive = [];
+                    
+                    // RÈGLE 1 : intro s'archive dès que 5 arrive
+                    if (sid === "5") {
+                        const intro = nextHand.find(c => String(c.id) === "intro");
+                        if (intro) { toArchive.push(intro); nextHand = nextHand.filter(c => String(c.id) !== "intro"); }
                     }
-                } else { setPenalty(p => p + 3); addToHistory(`Code machine erroné (${m.id}).`, 'error'); }
-                setMachineCode("");
+
+                    // RÈGLE 2 : La 5 s'archive si F et 44 sont possédés
+                    const hasF = updatedFoundIds(sid).has('F');
+                    const has44 = updatedFoundIds(sid).has('44');
+                    if (hasF && has44) {
+                        const c5 = nextHand.find(c => String(c.id) === '5');
+                        if (c5) { 
+                            toArchive.push(c5); 
+                            nextHand = nextHand.filter(c => String(c.id) !== '5'); 
+                        }
+                    }
+
+                    // Hub Bureau & Coffre
+                    if (sid === 'R') {
+                         const c86 = nextHand.find(c => String(c.id) === '86');
+                         if (c86) { toArchive.push(c86); nextHand = nextHand.filter(c => String(c.id) !== '86'); }
+                    }
+
+                    // Archivage PDF Automatique
+                    if (AUTO_DISCARD_RULES[sid]) {
+                        const targets = AUTO_DISCARD_RULES[sid];
+                        toArchive = [...toArchive, ...nextHand.filter(c => targets.includes(String(c.id)))];
+                        nextHand = nextHand.filter(c => !targets.includes(String(c.id)));
+                    }
+
+                    toArchive.forEach((c, i) => setTimeout(() => executeArchiveFly(c), i * 200));
+                    setFoundIds(prev => new Set(prev).add(sid));
+
+                    return nextHand;
+                });
+
+                if(!silent) {
+                    const audio = new Audio(GITHUB_AUDIO + `reveal_${sid}.wav`);
+                    audio.volume = 0.15; audio.play().catch(() => {});
+                }
+            }, [executeArchiveFly, foundIds]);
+
+            const updatedFoundIds = (newId) => {
+                const next = new Set(foundIds);
+                next.add(newId);
+                return next;
             };
 
-            const handleCodeSubmit = (e) => {
-                e.preventDefault();
-                const v = inputValue.toUpperCase();
-                if (["6", "66", "666"].includes(v)) {
-                    setPenalty(p => p + 6); setSpecialPenalty(true);
-                    addToHistory("Code interdit détecté. Pénalité de 6m.", 'error');
-                    setInputValue(""); return;
+            const handleCombine = useCallback((id1, id2) => {
+                const ids = [String(id1), String(id2)];
+                const match = Object.keys(GAME_DATA.combinations).find(key => {
+                    const parts = key.split('+');
+                    return parts.includes(ids[0]) && parts.includes(ids[1]);
+                });
+                if (match) {
+                    const res = GAME_DATA.combinations[match];
+                    setHand(p => p.filter(c => String(c.id) !== String(id1) && String(c.id) !== String(id2)));
+                    addCard(res);
+                } else { 
+                    setPenalty(p => p + 1); addToHistory(`Incompatible.`, 'error');
                 }
-                let tid = GAME_DATA.cards[v] ? v : (v === 'F' ? 'F' : (v === 'R' ? 'R' : null));
-                if (tid && !foundIds.has(tid)) {
-                    addCard(tid); setCodeState('success'); setTimeout(()=>setCodeState(null), 600);
-                } else {
-                    setPenalty(p => p + 2); setCodeState('error'); setTimeout(()=>setCodeState(null), 600);
+                setSelectedId(null);
+            }, [addCard, addToHistory]);
+
+            const handleAction = useCallback((card) => {
+                const sid = String(card.id);
+                if (card.type === 'green') { setActiveMachine(card); setMachineCode(""); }
+                else if (selectedId === null) setSelectedId(sid);
+                else if (selectedId === sid) setSelectedId(null);
+                else handleCombine(selectedId, sid);
+            }, [selectedId, handleCombine]);
+
+            useEffect(() => {
+                if (view === 'game') {
+                    if (hand.length === 0) addCard('intro', true); 
+                    const timerInt = setInterval(() => setTime(prev => prev + 1), 1000);
+                    return () => clearInterval(timerInt);
                 }
-                setInputValue("");
-            };
+            }, [view, addCard, hand.length]);
+
+            /* --- RENDER --- */
 
             if (view === 'home') return (
-                <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] p-8 text-center animate-fade-in">
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] p-8 text-center animate-fade-in text-white text-center">
                     <div className="ripple-container mb-12"><div className="ripple-circle"></div><div className="ripple-circle"></div><div className="ripple-circle"></div><div className="main-orb"></div></div>
-                    <h1 className="text-3xl font-black text-white uppercase tracking-[0.4em] mb-4">Liaison Orus</h1>
-                    {!isInitialLoaded ? <p className="text-[10px] text-red-500 font-black uppercase animate-pulse">Synchronisation...</p> : (
-                        <div className="space-y-8 animate-fade-in">
-                            <div className="max-w-xs mx-auto space-y-4">
-                                <p className="text-xs text-slate-500 font-bold uppercase tracking-widest text-blue-400">Protocole Actif</p>
-                                <div className="text-[11px] text-slate-400 leading-relaxed bg-black/40 p-5 rounded-2xl border border-slate-800 text-left border-l-4 border-l-red-600 shadow-2xl italic">
-                                    "Agent, le canal est prêt. Infiltration immédiate de la 5ème Avenue. Journal de mission et indices activés."
-                                </div>
-                            </div>
-                            <button onClick={initAudio} className="py-6 px-14 bg-red-700 hover:bg-red-600 text-white font-black rounded-full uppercase tracking-widest active:scale-95 shadow-[0_0_30px_rgba(185,28,28,0.4)] transition-all">Se Connecter</button>
-                        </div>
-                    )}
+                    <h1 className="text-3xl font-black uppercase tracking-[0.4em] mb-4 text-center">Liaison Orus</h1>
+                    {!isInitialLoaded ? <p className="text-[10px] text-emerald-400 font-black uppercase animate-pulse text-center">Initialisation...</p> : 
+                    <button onClick={() => { 
+                        if (!audioCtxRef.current) {
+                            audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+                            masterGainRef.current = audioCtxRef.current.createGain();
+                            masterGainRef.current.gain.value = 0.6;
+                            masterGainRef.current.connect(audioCtxRef.current.destination);
+                        }
+                        startAmbience();
+                        setView('game'); 
+                    }} className="py-6 px-14 bg-red-700 hover:bg-red-600 text-white font-black rounded-2xl uppercase tracking-widest active:scale-95 shadow-2xl transition-all">Se Connecter</button>}
                 </div>
             );
 
             return (
-                <div className="flex flex-col items-center min-h-screen w-full bg-[#020617] text-slate-300 overflow-hidden font-sans">
+                <div className="flex flex-col items-center min-h-screen w-full bg-[#020617] text-slate-300 overflow-hidden font-sans text-center">
                     {animatingCards.map(c => (
                         <div key={c.animId} className="card-fly-overlay overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900" style={{'--tx': `${c.tx}px`, '--ty': `${c.ty}px`}}>
-                            <img src={c.fallbackImg} className="w-full h-full object-cover" />
+                            <SafeImage src={c.fallbackImg} className="w-full h-full object-cover" />
                         </div>
                     ))}
 
                     <div className="w-full max-lg bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700 flex items-center gap-2 sticky top-2 z-50 mb-6 mx-2 shadow-2xl">
-                        <div className="flex flex-col items-center bg-black/40 px-3 py-1.5 rounded-xl border border-slate-800 min-w-[80px]">
-                            <div className="font-mono font-bold text-white text-sm">{Math.floor(time/60)}:{(time%60).toString().padStart(2,'0')}</div>
-                            <div className="flex gap-1 mt-1 items-center"><div className={`signal-led ${pianoSignal ? 'signal-active' : ''}`}></div>{penalty > 0 && <span className="text-[8px] text-red-500 font-black">+{penalty}m</span>}</div>
+                        <div className="flex flex-col items-center bg-black/40 px-3 py-1.5 rounded-xl border border-slate-800 min-w-[80px] relative text-center">
+                            <div className="font-mono font-bold text-white text-sm text-center">{Math.floor(time/60)}:{(time%60).toString().padStart(2,'0')}</div>
+                            <div className="flex gap-1 mt-1 items-center justify-center">
+                                <div className={`signal-led ${pianoSignal ? 'signal-active' : ''}`}></div>
+                                {penalty > 0 && <span className="text-[8px] text-red-500 font-black">+{penalty}m</span>}
+                            </div>
                         </div>
-                        <form onSubmit={handleCodeSubmit} className={`flex-grow flex items-center bg-black/50 border border-slate-700 rounded-xl px-2 transition-all ${codeState === 'error' ? 'animate-shake-error' : codeState === 'success' ? 'animate-success-flash' : ''}`}>
+                        <form onSubmit={(e) => { 
+                            e.preventDefault(); const v = inputValue.toUpperCase();
+                            if (["6", "66", "666"].includes(v)) { setPenalty(p => p + 6); setInputValue(""); return; }
+                            let tid = GAME_DATA.cards[v] ? v : (v === 'F' ? 'F' : (v === 'R' ? 'R' : null));
+                            if (tid) { addCard(tid); setCodeState('success'); setTimeout(()=>setCodeState(null), 600); }
+                            else { setPenalty(p => p + 2); setCodeState('error'); setTimeout(()=>setCodeState(null), 600); }
+                            setInputValue("");
+                        }} className={`flex-grow flex items-center bg-black/50 border border-slate-700 rounded-xl px-2 transition-all ${codeState === 'error' ? 'animate-shake-error' : codeState === 'success' ? 'animate-success-flash' : ''}`}>
                             <input value={inputValue} onChange={e => setInputValue(e.target.value)} placeholder="CODE" className="w-full bg-transparent p-2 text-white font-black text-center text-sm outline-none uppercase tracking-widest" />
                             <button className="p-2 text-blue-500 font-black">OK</button>
                         </form>
                         <button onClick={() => setIsMuted(!isMuted)} className="p-2.5 bg-slate-800 rounded-xl active:scale-95 text-slate-400">
                              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={isMuted ? "#ef4444" : "#3b82f6"} strokeWidth="2.5"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"/>{isMuted && <line x1="1" y1="1" x2="23" y2="23" stroke="#ef4444" strokeWidth="2" />}</svg>
                         </button>
-                        <button ref={gridBtnRef} onClick={() => setShowArchive(true)} className="p-2.5 bg-slate-800 rounded-xl active:scale-95 text-slate-400"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+                        <button ref={gridBtnRef} onClick={() => setShowArchive(true)} className="p-2.5 bg-slate-800 rounded-xl active:scale-95 text-slate-400"><IconSearch /></button>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full max-w-lg px-3 pb-32 overflow-y-auto no-scrollbar">
                         {hand.map(c => (
-                            <div key={c.id} className={`group relative card-ratio bg-slate-900 border-2 rounded-[1.8rem] overflow-hidden transition-all ${selectedId === c.id ? 'selected-card' : 'border-slate-800'}`}>
+                            <div key={c.id} className={`group relative card-ratio bg-slate-900 border-2 rounded-[1.8rem] overflow-hidden transition-all ${selectedId === String(c.id) ? 'selected-card' : 'border-slate-800'}`}>
                                 <div className="w-full h-full cursor-pointer relative" onClick={() => { setZoomedCard(c); setShowZoomInfo(false); }}>
-                                    <img src={c.fallbackImg} className="w-full h-full object-cover" />
+                                    <SafeImage src={c.fallbackImg} className="w-full h-full object-cover" />
                                     <div className="absolute top-0 right-0 bg-black/80 px-4 py-1.5 font-black text-white rounded-bl-2xl text-xs">{c.id}</div>
-                                    <div className="absolute bottom-3 left-0 right-0 flex justify-between px-3">
-                                        {c.hint && (
-                                            <button onClick={(e) => { e.stopPropagation(); handleHintClick(c); }} className={`w-10 h-10 bg-slate-900/80 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-xl active:scale-90 ${purchasedHints.has(c.id) ? 'text-emerald-400' : 'text-yellow-500 animate-pulse-hint'}`}>
-                                                <IconLightbulb size={20} />
-                                            </button>
-                                        )}
+                                    <div className="absolute bottom-3 left-0 right-0 flex justify-between px-3 text-center">
+                                        <div className="w-10"></div>
                                         {(c.type === 'red' || c.type === 'blue' || c.type === 'green') && (
-                                            <button onClick={(e) => { e.stopPropagation(); handleAction(c); }} className={`w-12 h-12 bg-slate-900/80 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-xl active:scale-90 ${selectedId === c.id ? 'bg-yellow-500 text-black' : ''}`}>
-                                                {c.type === 'green' ? <IconGear size={24} /> : (c.type === 'red' ? <IconPuzzleMale /> : <IconPuzzleFemale />)}
+                                            <button onClick={(e) => { e.stopPropagation(); handleAction(c); }} className={`w-12 h-12 bg-black/70 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center shadow-xl active:scale-90 ${selectedId === String(c.id) ? 'bg-yellow-500 text-black border-yellow-400' : 'text-white'}`}>
+                                                {c.type === 'green' ? <IconGear /> : (c.type === 'red' ? <IconPuzzleMale /> : <IconPuzzleFemale />)}
                                             </button>
                                         )}
                                     </div>
@@ -428,73 +385,49 @@
                         ))}
                     </div>
 
+                    {/* ZOOM VIEW */}
                     {zoomedCard && (
-                        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center animate-fade-in" onClick={() => setShowZoomInfo(!showZoomInfo)}>
-                            <img src={zoomedCard.fallbackImg} className="max-h-[100vh] max-w-full object-contain" />
-                            <div className="absolute top-8 left-8 flex gap-3 z-[200]">
-                                {(zoomedCard.type === 'red' || zoomedCard.type === 'blue' || zoomedCard.type === 'green') && (
-                                    <button onClick={(e) => { e.stopPropagation(); handleAction(zoomedCard); }} className={`p-4 bg-black/60 rounded-full text-white border border-white/20 active:scale-90 shadow-2xl ${selectedId === zoomedCard.id ? 'bg-yellow-500 text-black border-yellow-400' : ''}`}>
-                                        {zoomedCard.type === 'green' ? <IconGear size={28} /> : (zoomedCard.type === 'red' ? <IconPuzzleMale size={28} /> : <IconPuzzleFemale size={28} />)}
-                                    </button>
-                                )}
-                                {zoomedCard.hint && (
-                                    <button onClick={(e) => { e.stopPropagation(); handleHintClick(zoomedCard); }} className={`p-4 bg-black/60 rounded-full border border-white/20 active:scale-90 shadow-2xl ${purchasedHints.has(zoomedCard.id) ? 'text-emerald-400' : 'text-yellow-500'}`}>
-                                        <IconLightbulb size={28} />
-                                    </button>
-                                )}
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); setZoomedCard(null); }} className="absolute top-8 right-8 bg-black/60 p-5 rounded-full text-white z-[500] border border-white/20 active:scale-90 shadow-2xl"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-                            <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/90 p-8 rounded-t-[3rem] transition-transform duration-300 ${showZoomInfo ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
-                                <h2 className="text-2xl font-black mb-4 uppercase text-white border-b border-slate-800 pb-4">{zoomedCard.title}</h2>
-                                <p className="text-slate-400 text-base mb-8 italic">"{zoomedCard.desc}"</p>
-                                <div className="flex flex-col gap-3">
-                                    {zoomedCard.reveals?.filter(id => !foundIds.has(id)).map(id => (
-                                        <button key={id} onClick={() => { addCard(id); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white uppercase text-sm tracking-widest shadow-xl">Prendre carte {id}</button>
-                                    ))}
-                                    <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest">Refermer</button>
+                        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-center animate-fade-in p-4 text-center" onClick={() => setShowZoomInfo(!showZoomInfo)}>
+                            <div className="relative inline-flex flex-col items-center max-h-[90vh] max-w-full group" onClick={e => e.stopPropagation()}>
+                                <SafeImage src={zoomedCard.fallbackImg} className="max-h-[82vh] w-auto object-contain shadow-2xl rounded-2xl border border-white/10" />
+                                
+                                <div className="absolute bottom-4 left-4 right-4 flex justify-between items-center pointer-events-none text-center">
+                                    <div className="pointer-events-auto">
+                                        <button onClick={(e) => { e.stopPropagation(); setHintMsg(zoomedCard.hint || "Pas d'indice."); }} className="p-4 zoom-btn rounded-full text-yellow-500 shadow-2xl"><IconLightbulb /></button>
+                                    </div>
+                                    <div className="pointer-events-auto">
+                                        {(zoomedCard.type === 'red' || zoomedCard.type === 'blue' || zoomedCard.type === 'green') && (
+                                            <button onClick={(e) => { e.stopPropagation(); handleAction(zoomedCard); }} className={`p-4 zoom-btn rounded-full shadow-2xl ${selectedId === String(zoomedCard.id) ? 'bg-yellow-500 text-black border-yellow-400' : 'text-white'}`}>
+                                                {zoomedCard.type === 'green' ? <IconGear /> : (zoomedCard.type === 'red' ? <IconPuzzleMale /> : <IconPuzzleFemale />)}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="pointer-events-auto">
+                                        <button onClick={(e) => { e.stopPropagation(); setShowZoomInfo(true); const audio = new Audio(`${GITHUB_AUDIO}desc_${zoomedCard.id}.wav`); audio.play().catch(()=>{}); }} className="p-4 zoom-btn rounded-full text-white shadow-2xl"><IconSearch /></button>
+                                    </div>
                                 </div>
+
+                                <button onClick={(e) => { e.stopPropagation(); setZoomedCard(null); }} className="absolute -top-4 -right-4 bg-red-600 p-4 rounded-full text-white z-[500] shadow-2xl active:scale-90 border-2 border-white/20"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                             </div>
-                            {!showZoomInfo && <button onClick={(e) => { e.stopPropagation(); setShowZoomInfo(true); playVoice(`desc_${zoomedCard.id}`); }} className="absolute bottom-20 bg-slate-900/90 px-8 py-5 rounded-full border border-slate-700 text-xs font-black uppercase text-white flex items-center gap-3 active:scale-95 shadow-2xl"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Analyser</button>}
-                        </div>
-                    )}
 
-                    {specialPenalty && (
-                        <div className="fixed inset-0 z-[400] bg-black flex flex-col items-center justify-center p-8 animate-fade-in text-center">
-                            <img src="https://raw.githubusercontent.com/delormenuiserie-ctrl/escape-game-unlock/main/carte%206.png" className="w-full max-w-xs rounded-3xl mb-8 border-4 border-red-600 shadow-[0_0_40px_rgba(220,38,38,0.5)]" />
-                            <h2 className="text-red-500 font-black text-xl uppercase mb-4 tracking-tighter">Code Interdit</h2>
-                            <p className="text-white text-base italic mb-10">"C'est le plus mauvais des codes, vous prenez 6 minutes de pénalité."</p>
-                            <button onClick={() => setSpecialPenalty(false)} className="px-12 py-5 bg-red-700 text-white font-black rounded-2xl uppercase tracking-widest active:scale-95 shadow-2xl">Accepter le châtiment</button>
-                        </div>
-                    )}
-
-                    {hintMsg && (
-                        <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center p-6 animate-fade-in" onClick={() => setHintMsg(null)}>
-                            <div className="bg-slate-900 border-2 border-yellow-500/50 p-8 rounded-[2.5rem] max-w-xs w-full shadow-2xl text-center" onClick={e => e.stopPropagation()}>
-                                <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-yellow-500"><IconLightbulb size={32} /></div>
-                                {hintMsg.confirm ? (
-                                    <>
-                                        <h3 className="text-white font-black uppercase mb-2 text-sm">Aide de terrain ?</h3>
-                                        <p className="text-slate-400 text-[10px] mb-8 uppercase tracking-widest leading-relaxed">Le décryptage de cet indice vous coûtera <span className="text-red-500 font-black">5 minutes</span>.</p>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <button onClick={() => setHintMsg(null)} className="py-4 bg-slate-800 rounded-xl font-bold text-slate-400 uppercase text-[10px]">Annuler</button>
-                                            <button onClick={confirmHint} className="py-4 bg-yellow-600 text-black rounded-xl font-black uppercase text-[10px] shadow-lg">Confirmer</button>
-                                        </div>
-                                    </>
-                                ) : (
-                                    <>
-                                        <h3 className="text-yellow-500 font-black uppercase mb-4 tracking-widest text-sm text-center">Transmission reçue</h3>
-                                        <p className="text-white text-xs italic mb-8 leading-relaxed">"{hintMsg}"</p>
-                                        <button onClick={() => setHintMsg(null)} className="w-full py-4 bg-slate-800 text-white font-black rounded-xl uppercase text-[10px]">Reçu</button>
-                                    </>
-                                )}
+                            <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/95 p-8 rounded-t-[3rem] transition-transform duration-300 z-[300] border-t border-white/10 ${showZoomInfo ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
+                                <h2 className="text-xl font-black mb-2 uppercase text-white border-b border-slate-800 pb-3 text-center tracking-widest">{zoomedCard.title}</h2>
+                                <p className="text-slate-400 text-sm italic mb-8 text-center leading-relaxed">"{zoomedCard.desc}"</p>
+                                <div className="flex flex-col gap-3">
+                                    {/* ZOOM PERSISTANT - FIGÉ */}
+                                    {zoomedCard.reveals?.filter(id => !foundIds.has(String(id))).map(id => (
+                                        <button key={id} onClick={() => { addCard(id); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white uppercase text-xs tracking-[0.2em] shadow-xl text-center">Prendre carte {id}</button>
+                                    ))}
+                                    <button onClick={() => setShowZoomInfo(false)} className="w-full py-4 text-slate-500 font-bold uppercase text-[10px] tracking-widest text-center text-center">Refermer</button>
+                                </div>
                             </div>
                         </div>
                     )}
 
                     {showArchive && (
-                        <div className="fixed inset-0 z-[250] bg-slate-950 flex flex-col animate-fade-in">
+                        <div className="fixed inset-0 z-[250] bg-slate-950 flex flex-col animate-fade-in text-white text-center">
                             <div className="bg-slate-900 p-2 flex justify-center border-b border-slate-800 shrink-0 relative">
-                                <div className="flex bg-black/40 rounded-xl p-1 w-full max-w-sm">
+                                <div className="flex bg-black/40 rounded-xl p-1 w-full max-sm">
                                     <button onClick={() => setMenuTab('gallery')} className={`flex-grow py-3 rounded-lg text-[10px] font-black uppercase transition-all ${menuTab === 'gallery' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Galerie</button>
                                     <button onClick={() => setMenuTab('history')} className={`flex-grow py-3 rounded-lg text-[10px] font-black uppercase transition-all ${menuTab === 'history' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Journal</button>
                                 </div>
@@ -502,26 +435,22 @@
                             </div>
                             <div className="flex-grow overflow-y-auto p-4 no-scrollbar">
                                 {menuTab === 'gallery' ? (
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-3 gap-3 text-center">
                                         {ALL_IDS.map(id => {
-                                            const isFound = foundIds.has(id), card = GAME_DATA.cards[id];
+                                            const sid = String(id);
+                                            const isFound = foundIds.has(sid), card = GAME_DATA.cards[sid];
                                             return (
                                                 <div key={id} onClick={() => isFound ? setInspectCard(card) : null} className={`aspect-[2/3] rounded-xl border-2 flex items-center justify-center relative overflow-hidden active:scale-95 ${isFound ? 'border-blue-500/50 bg-slate-900 shadow-lg' : 'border-slate-800 bg-black/20'}`}>
-                                                    {isFound ? (
-                                                        <>
-                                                            <img src={card.fallbackImg} className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[50%]" />
-                                                            <span className="font-black z-10 text-white text-base bg-black/40 px-2 rounded-lg">{id === 'intro' ? 'I' : id}</span>
-                                                        </>
-                                                    ) : <span className="text-slate-800 font-black text-3xl">?</span>}
+                                                    {isFound ? ( <> <SafeImage src={card.fallbackImg} className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[50%]" /> <span className="font-black z-10 text-white text-base bg-black/40 px-2 rounded-lg">{id === 'intro' ? 'I' : id}</span> </> ) : <span className="text-slate-800 font-black text-3xl">?</span>}
                                                 </div>
                                             );
                                         })}
                                     </div>
                                 ) : (
-                                    <div className="space-y-4">
+                                    <div className="space-y-4 text-left p-2 text-center text-center">
                                         {history.map((h, i) => (
                                             <div key={i} className={`flex gap-4 p-4 rounded-2xl border ${h.type === 'error' ? 'border-red-900/50 bg-red-950/20' : 'border-slate-800 bg-slate-900/40'}`}>
-                                                <span className="font-mono text-[10px] text-slate-500 pt-1 shrink-0">{h.time}</span>
+                                                <span className="font-mono text-[10px] text-slate-500 pt-1 shrink-0 text-center">{h.time}</span>
                                                 <p className={`text-xs font-bold ${h.type === 'error' ? 'text-red-400' : 'text-slate-300'}`}>{h.label}</p>
                                             </div>
                                         ))}
@@ -531,34 +460,66 @@
                         </div>
                     )}
 
-                    {inspectCard && (
-                        <div className="fixed inset-0 z-[300] bg-black/95 flex items-center justify-center p-4 animate-fade-in" onClick={() => setInspectCard(null)}>
-                            <div className="bg-slate-900 rounded-[2.5rem] w-full max-w-sm overflow-hidden border border-slate-700 shadow-2xl" onClick={e => e.stopPropagation()}>
-                                <img src={inspectCard.fallbackImg} className="w-full aspect-[3/2] object-cover" />
-                                <div className="p-8">
-                                    <h2 className="text-2xl font-black text-white uppercase mb-4 tracking-tighter">{inspectCard.title}</h2>
-                                    <p className="text-slate-400 text-sm italic mb-8">"{inspectCard.desc}"</p>
-                                    <button onClick={() => setInspectCard(null)} className="w-full py-4 bg-slate-800 text-white font-black uppercase text-xs rounded-2xl active:scale-95">Refermer</button>
+                    {activeMachine && (
+                        <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 text-center">
+                            <div className="bg-slate-900 border-2 border-emerald-500 p-8 rounded-[3rem] max-w-xs w-full shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-emerald-400 font-black mb-6 uppercase text-center flex items-center justify-center gap-2 text-center"><IconGear /> {activeMachine.title}</h3>
+                                <input autoFocus value={machineCode} onChange={e => setMachineCode(e.target.value.replace(/\D/g,'').slice(0,4))} onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        const v = machineCode.toUpperCase();
+                                        if (v === GAME_DATA.codes[activeMachine.id]) {
+                                            if (activeMachine.id === 'W') { 
+                                                setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Machine W (Prête)" } : c));
+                                                setActiveMachine(null); addCard("43");
+                                            } else {
+                                                const mc = hand.find(c => String(c.id) === String(activeMachine.id));
+                                                setHand(p => p.filter(c => String(c.id) !== String(activeMachine.id)));
+                                                if (mc) executeArchiveFly(mc);
+                                                if (activeMachine.id === 'R') addCard("22");
+                                                setActiveMachine(null);
+                                            }
+                                        } else { setPenalty(p => p + 3); }
+                                        setMachineCode("");
+                                    }
+                                }} placeholder="----" className="w-full bg-black/60 border border-slate-800 rounded-2xl p-8 mb-10 text-center text-6xl font-mono text-emerald-500 outline-none tracking-[10px]" />
+                                <div className="grid grid-cols-2 gap-4 text-center">
+                                    <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-[10px] text-center">Annuler</button>
+                                    <button onClick={() => {
+                                        const v = machineCode.toUpperCase();
+                                        if (v === GAME_DATA.codes[activeMachine.id]) {
+                                            if (activeMachine.id === 'W') { 
+                                                setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Machine W (Prête)" } : c));
+                                                setActiveMachine(null); addCard("43");
+                                            }
+                                            else { 
+                                                const mc = hand.find(c => String(c.id) === String(activeMachine.id));
+                                                setHand(p => p.filter(c => String(c.id) !== String(activeMachine.id)));
+                                                if (mc) executeArchiveFly(mc);
+                                                if (activeMachine.id === 'R') addCard("22"); 
+                                                setActiveMachine(null); 
+                                            }
+                                        } else { setPenalty(p => p + 3); }
+                                        setMachineCode("");
+                                    }} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-[10px] text-center text-center">Valider</button>
                                 </div>
                             </div>
                         </div>
                     )}
-
-                    {activeMachine && (
-                        <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4">
-                            <div className="bg-slate-900 border-2 border-emerald-500 p-8 rounded-[3rem] max-w-xs w-full shadow-2xl">
-                                <h3 className="text-emerald-400 font-black mb-6 uppercase text-center tracking-widest flex items-center justify-center gap-2"><IconGear size={20}/> {activeMachine.title}</h3>
-                                <input autoFocus value={machineCode} onChange={e => setMachineCode(e.target.value.replace(/\D/g,'').slice(0,4))} onKeyDown={e => e.key === 'Enter' && solveMachine(activeMachine, machineCode)} placeholder="----" className="w-full bg-black/60 border border-slate-800 rounded-2xl p-8 mb-10 text-center text-6xl font-mono text-emerald-500 outline-none tracking-[10px]" />
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-[10px]">Annuler</button>
-                                    <button onClick={() => solveMachine(activeMachine, machineCode)} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-[10px]">Valider</button>
-                                </div>
+                    
+                    {hintMsg && (
+                        <div className="fixed inset-0 z-[300] bg-black/90 flex items-center justify-center p-6 animate-fade-in text-center text-center text-center" onClick={() => setHintMsg(null)}>
+                            <div className="bg-slate-900 border-2 border-yellow-500/50 p-8 rounded-[2.5rem] max-w-xs w-full shadow-2xl text-center text-center text-center text-center text-center" onClick={e => e.stopPropagation()}>
+                                <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-500 text-center text-center text-center text-center text-center"><IconLightbulb /></div>
+                                <h3 className="text-yellow-500 font-black uppercase mb-4 tracking-widest text-xs text-center text-center text-center text-center text-center text-center">Transmission reçue</h3>
+                                <p className="text-white text-xs italic mb-8 leading-relaxed text-center text-center text-center text-center text-center text-center text-center">"{hintMsg}"</p>
+                                <button onClick={() => setHintMsg(null)} className="w-full py-4 bg-slate-800 text-white font-black rounded-xl uppercase text-[10px] text-center text-center text-center text-center text-center">Reçu</button>
                             </div>
                         </div>
                     )}
                 </div>
             );
         }
+
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>

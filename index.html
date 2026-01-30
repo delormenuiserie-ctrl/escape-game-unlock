@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Unlock! 5ème Avenue - Version Base 8.3</title>
+    <title>Unlock! 5ème Avenue - Version Beta 8.9</title>
     
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -48,7 +48,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useMemo, useCallback, memo } = React;
 
-        /* --- COMPOSANTS UI FIGÉS --- */
+        /* --- COMPOSANTS UI --- */
         const SafeImage = memo(({ src, className, alt = "" }) => {
             const [error, setError] = useState(false);
             if (error || !src) return (
@@ -66,14 +66,18 @@
         const IconPuzzleFemale = () => (
           <svg width="24" height="24" viewBox="0 0 24 24"><rect x="8" y="4" width="12" height="16" rx="1" fill="#60a5fa" /><circle cx="8" cy="12" r="3.5" fill="#020617" /></svg>
         );
-        /* ICONE ROUAGE INDUSTRIEL (VALIDÉE) */
+        
+        /* ✅ ICONE ROUAGE RÉPARÉE */
         const IconGear = () => (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 home 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
         );
+
         const IconLightbulb = () => (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>
         );
-        /* ICONE LOUPE DÉTECTIVE (VALIDÉE) */
         const IconSearch = () => (
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="10" r="7" strokeWidth="2.5"/><path d="M15 15l6 6" strokeWidth="4"/><path d="M12 7a4.5 4.5 0 0 0-4 1" opacity="0.4" strokeWidth="1.5"/></svg>
         );
@@ -105,26 +109,21 @@
                 'P': { id: 'P', type: 'gold', title: "Le Palantir", desc: "Le bonus ultime de Kronos !", fallbackImg: GITHUB_RAW + "carte%20P.png" },
                 '6': { id: '6', type: 'grey', isCursed: true, title: "Zone Maudite", desc: "MALÉDICTION : Le temps vous échappe... Une force obscure ralentit vos mouvements. (+6 minutes)", fallbackImg: GITHUB_RAW + "carte%206.png" }
             },
-            combinations: { 
-                "15+58": "73", 
-                "37+W": "43", 
-                "42+44": "86", 
-                "8+22": "P" 
-            },
+            combinations: { "15+58": "73", "37+W": "43", "42+44": "86", "8+22": "P" },
             codes: { 'W': "43", 'R': "53" }
         };
 
         const AUTO_DISCARD_RULES = { 
             "86": ["44", "42", "F"], 
-            "43": ["25", "37", "W"], // Archivage du portrait fermé et du matériel
-            "T": ["43"], // Le portrait ouvert s'archive une fois le talisman pris
+            "43": ["25", "37", "W"], 
+            "T": ["43"], 
             "73": ["15", "58"], 
-            "P": ["8", "22"] // La carte T reste visible
+            "P": ["8", "22"] 
         };
         const ALL_IDS = Object.keys(GAME_DATA.cards);
 
         function App() {
-            // ÉTATS GÉNÉRAUX
+            // ÉTATS
             const [view, setView] = useState('home');
             const [hand, setHand] = useState([]);
             const [discardPile, setDiscardPile] = useState([]);
@@ -133,7 +132,6 @@
             const [penalty, setPenalty] = useState(0);
             const [history, setHistory] = useState([{ time: "00:00", label: "Agent Orus prêt.", type: 'system' }]);
             
-            // UI STATES
             const [selectedId, setSelectedId] = useState(null);
             const [inputValue, setInputValue] = useState("");
             const [zoomedCard, setZoomedCard] = useState(null);
@@ -158,12 +156,10 @@
             const audioCtxRef = useRef(null);
             const masterGainRef = useRef(null);
             const gridBtnRef = useRef(null);
-
-            /* --- GESTION AUDIO PRIORITAIRE --- */
             const activeAudioRef = useRef(null);
             const isNarrationPlayingRef = useRef(false);
 
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'unlock-5th-ave-v810';
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'unlock-5th-ave-v89-fix';
 
             const addToHistory = useCallback((label, type = 'action') => {
                 const timeStr = `${Math.floor(time/60).toString().padStart(2,'0')}:${(time%60).toString().padStart(2,'0')}`;
@@ -189,7 +185,7 @@
                 initFirebase();
             }, []);
 
-            /* --- MASTER MUTE EFFECT --- */
+            /* --- MASTER MUTE --- */
             useEffect(() => {
                 if (masterGainRef.current) {
                     masterGainRef.current.gain.setTargetAtTime(isMuted ? 0 : 0.6, 0, 0.1);
@@ -221,25 +217,21 @@
                 playPiano();
             };
 
-            /* --- FONCTION AUDIO GÉRÉE --- */
+            /* --- AUDIO GÉRÉ --- */
             const playManagedAudio = useCallback((id, type = 'desc') => {
                 if (isMuted) return;
                 if (type === 'reveal' && isNarrationPlayingRef.current) return;
-
                 if (activeAudioRef.current) {
                     activeAudioRef.current.pause();
                     activeAudioRef.current.currentTime = 0;
                 }
-
                 const audio = new Audio(`${GITHUB_AUDIO}${type}_${id}.wav`);
                 audio.volume = type === 'desc' ? 0.45 : 0.25;
-
                 if (type === 'desc') {
                     isNarrationPlayingRef.current = true;
                     audio.onended = () => { isNarrationPlayingRef.current = false; };
                     audio.onerror = () => { isNarrationPlayingRef.current = false; };
                 }
-
                 activeAudioRef.current = audio;
                 audio.play().catch(() => { if (type === 'desc') isNarrationPlayingRef.current = false; });
             }, [isMuted]);
@@ -266,30 +258,23 @@
                     let nextHand = [...prevHand, card];
                     let toArchive = [];
                     
-                    // RÈGLE FIGÉE 1 : intro s'archive dès que 5 arrive
                     if (sid === "5") {
                         const intro = nextHand.find(c => String(c.id) === "intro");
                         if (intro) { toArchive.push(intro); nextHand = nextHand.filter(c => String(c.id) !== "intro"); }
                     }
 
-                    // RÈGLE FIGÉE 2 : La 5 s'archive UNIQUEMENT si F et 44 sont possédés
                     const hasF = updatedFoundIds(sid).has('F');
                     const has44 = updatedFoundIds(sid).has('44');
                     if (hasF && has44) {
                         const c5 = nextHand.find(c => String(c.id) === '5');
-                        if (c5) { 
-                            toArchive.push(c5); 
-                            nextHand = nextHand.filter(c => String(c.id) !== '5'); 
-                        }
+                        if (c5) { toArchive.push(c5); nextHand = nextHand.filter(c => String(c.id) !== '5'); }
                     }
 
-                    // Hub Bureau & Coffre
                     if (sid === 'R') {
                          const c86 = nextHand.find(c => String(c.id) === '86');
                          if (c86) { toArchive.push(c86); nextHand = nextHand.filter(c => String(c.id) !== '86'); }
                     }
 
-                    // Règles PDF Statiques Figées
                     if (AUTO_DISCARD_RULES[sid]) {
                         const targets = AUTO_DISCARD_RULES[sid];
                         toArchive = [...toArchive, ...nextHand.filter(c => targets.includes(String(c.id)))];
@@ -346,7 +331,7 @@
             /* --- RENDER --- */
 
             if (view === 'home') return (
-                <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] p-8 text-center animate-fade-in text-white text-center">
+                <div className="flex flex-col items-center justify-center min-h-screen bg-[#020617] p-8 text-center animate-fade-in text-white">
                     <div className="ripple-container mb-12"><div className="ripple-circle"></div><div className="ripple-circle"></div><div className="ripple-circle"></div><div className="main-orb"></div></div>
                     <h1 className="text-3xl font-black uppercase tracking-[0.4em] mb-4 text-center">Liaison Orus</h1>
                     {!isInitialLoaded ? <p className="text-[10px] text-emerald-400 font-black uppercase animate-pulse text-center">Initialisation...</p> : 
@@ -359,7 +344,7 @@
                         }
                         startAmbience();
                         setView('game'); 
-                    }} className="py-6 px-14 bg-red-700 hover:bg-red-600 text-white font-black rounded-2xl uppercase tracking-widest active:scale-95 shadow-2xl transition-all">Se Connecter</button>}
+                    }} className="py-6 px-14 bg-red-700 hover:bg-red-600 text-white font-black rounded-full uppercase tracking-widest active:scale-95 shadow-2xl transition-all">Se Connecter</button>}
                 </div>
             );
 
@@ -381,11 +366,10 @@
                         </div>
                         <form onSubmit={(e) => { 
                             e.preventDefault(); const v = inputValue.toUpperCase();
-                            /* ✅ LOGIQUE CODE MAUDIT AVEC CARTE 6 */
                             if (["6", "66", "666"].includes(v)) { 
                                 setPenalty(p => p + 6); 
                                 setCodeState('error'); 
-                                addToHistory("MALÉDICTION : Le temps file entre vos doigts...", 'error');
+                                addToHistory("MALÉDICTION : Le temps file...", 'error');
                                 setZoomedCard(GAME_DATA.cards['6']); 
                                 setInputValue(""); 
                                 return; 
@@ -452,7 +436,7 @@
 
                             <div className={`absolute bottom-0 left-0 right-0 bg-slate-950/95 p-8 rounded-t-[3rem] transition-transform duration-300 z-[300] border-t border-white/10 ${showZoomInfo || zoomedCard.isCursed ? 'translate-y-0' : 'translate-y-full'}`} onClick={e => e.stopPropagation()}>
                                 <h2 className="text-xl font-black mb-2 uppercase text-white border-b border-slate-800 pb-3 text-center tracking-widest">{zoomedCard.title}</h2>
-                                <p className="text-slate-400 text-sm italic mb-8 text-center text-center leading-relaxed text-center text-center">"{zoomedCard.desc}"</p>
+                                <p className="text-slate-400 text-sm italic mb-8 text-center text-center leading-relaxed">"{zoomedCard.desc}"</p>
                                 <div className="flex flex-col gap-3">
                                     {!zoomedCard.isCursed && zoomedCard.reveals?.filter(id => !foundIds.has(String(id))).map(id => (
                                         <button key={id} onClick={() => { addCard(id); }} className="w-full py-5 rounded-2xl font-black bg-blue-600 text-white uppercase text-xs tracking-[0.2em] shadow-xl text-center text-center">Prendre carte {id}</button>
@@ -477,8 +461,55 @@
                             <div className="bg-slate-900 border-2 border-yellow-500/50 p-8 rounded-[2.5rem] max-w-xs w-full shadow-2xl text-center text-center text-center text-center text-center" onClick={e => e.stopPropagation()}>
                                 <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-500 text-center text-center"><IconLightbulb /></div>
                                 <h3 className="text-yellow-500 font-black uppercase mb-4 tracking-widest text-xs text-center text-center text-center text-center">Transmission reçue</h3>
-                                <p className="text-white text-xs italic mb-8 leading-relaxed text-center text-center text-center text-center">"{hintMsg}"</p>
+                                <p className="text-white text-xs italic mb-8 leading-relaxed text-center text-center text-center">"{hintMsg}"</p>
                                 <button onClick={() => setHintMsg(null)} className="w-full py-4 bg-slate-800 text-white font-black rounded-xl uppercase text-[10px] text-center text-center text-center text-center text-center">Reçu</button>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeMachine && (
+                        <div className="fixed inset-0 z-[150] bg-black/90 flex items-center justify-center p-4 text-center">
+                            <div className="bg-slate-900 border-2 border-emerald-500 p-8 rounded-[3rem] max-w-xs w-full shadow-2xl text-center" onClick={e => e.stopPropagation()}>
+                                <h3 className="text-emerald-400 font-black mb-6 uppercase text-center flex items-center justify-center gap-2 text-center text-center"><IconGear /> {activeMachine.title}</h3>
+                                <input autoFocus value={machineCode} onChange={e => setMachineCode(e.target.value.replace(/\D/g,'').slice(0,4))} onKeyDown={e => {
+                                    if (e.key === 'Enter') {
+                                        const v = machineCode.toUpperCase();
+                                        if (v === GAME_DATA.codes[activeMachine.id]) {
+                                            if (activeMachine.id === 'W') { 
+                                                setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Machine W (Prête)" } : c));
+                                                setActiveMachine(null); 
+                                                // ✅ FIX LOGIQUE W: Pas d'ajout auto de 43, il faut assembler
+                                            } else {
+                                                const mc = hand.find(c => String(c.id) === String(activeMachine.id));
+                                                setHand(p => p.filter(c => String(c.id) !== String(activeMachine.id)));
+                                                if (mc) executeArchiveFly(mc);
+                                                if (activeMachine.id === 'R') addCard("22");
+                                                setActiveMachine(null);
+                                            }
+                                        } else { setPenalty(p => p + 3); }
+                                        setMachineCode("");
+                                    }
+                                }} placeholder="----" className="w-full bg-black/60 border border-slate-800 rounded-2xl p-8 mb-10 text-center text-6xl font-mono text-emerald-500 outline-none tracking-[10px] text-center" />
+                                <div className="grid grid-cols-2 gap-4 text-center">
+                                    <button onClick={() => setActiveMachine(null)} className="py-5 bg-slate-800 rounded-2xl font-bold text-slate-500 uppercase text-[10px] text-center text-center">Annuler</button>
+                                    <button onClick={() => {
+                                        const v = machineCode.toUpperCase();
+                                        if (v === GAME_DATA.codes[activeMachine.id]) {
+                                            if (activeMachine.id === 'W') { 
+                                                setHand(p => p.map(c => c.id === 'W' ? { ...c, type: 'blue', title: "Machine W (Prête)" } : c));
+                                                setActiveMachine(null);
+                                            }
+                                            else { 
+                                                const mc = hand.find(c => String(c.id) === String(activeMachine.id));
+                                                setHand(p => p.filter(c => String(c.id) !== String(activeMachine.id)));
+                                                if (mc) executeArchiveFly(mc);
+                                                if (activeMachine.id === 'R') addCard("22"); 
+                                                setActiveMachine(null); 
+                                            }
+                                        } else { setPenalty(p => p + 3); }
+                                        setMachineCode("");
+                                    }} className="py-5 bg-emerald-600 text-black rounded-2xl font-black shadow-lg uppercase text-[10px] text-center text-center">Valider</button>
+                                </div>
                             </div>
                         </div>
                     )}
